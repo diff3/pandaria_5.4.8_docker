@@ -1,0 +1,46 @@
+version: '3.9'
+
+services:
+
+  compile:
+    image: pandaria:compile
+    env_file:
+      - ./compile/compile.env
+    container_name: pandaria-compile
+    hostname: compile
+    build:
+      context: compile
+      dockerfile: Dockerfile
+      args:
+        USER_ID: ${USER_ID:-0}
+        GROUP_ID: ${GROUP_ID:-0}
+    environment:
+      - TZ=Europe/Stockholm
+    volumes:
+      - ./server:/opt/server:rw
+      - ./etc:/opt/etc:rw
+      - ${WOW_PATH}:/opt/wow:rw
+    restart: on-failure
+    tty: true
+    ports:
+      - "3724:3724"
+      - "3443:3443"
+      - "8085:8085"
+      - "8086:8086"
+
+  phpmyadmin:
+    image: phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      - PMA_HOST=trinitydb
+      - PMA_USER=root
+      - PMA_PASSWORD=pwd
+    restart: "no"
+    depends_on:
+      - compile
+    profiles:
+      - dev
+networks:
+  default:
+    name: pandaria-network

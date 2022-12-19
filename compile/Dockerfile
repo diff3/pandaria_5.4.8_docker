@@ -1,0 +1,15 @@
+FROM debian:11
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y tzdata vim tmux git clang libreadline-dev cmake libssl-dev make gcc g++  libboost-all-dev libace-dev wget lsb-release gnupg libbz2-dev bzip2 zip unzip
+
+RUN echo 'deb http://repo.mysql.com/apt/ubuntu bionic mysql-5.7' > /etc/apt/sources.list.d/mysql.list
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 467B942D3A79BD29
+
+RUN apt-get update && apt-get install -y mysql-client=5.7* mysql-community-server=5.7* mysql-server=5.7* libmysqlclient20
+RUN wget https://repo.mysql.com/apt/ubuntu/pool/mysql-5.7/m/mysql-community/libmysqlclient-dev_5.7.40-1ubuntu18.04_amd64.deb -P /tmp
+RUN dpkg -i /tmp/libmysqlclient-dev_5.7.40-1ubuntu18.04_amd64.deb
+
+COPY --chmod=755 entry.sh / 
+# CMD /entry.sh
+CMD /bin/bash
