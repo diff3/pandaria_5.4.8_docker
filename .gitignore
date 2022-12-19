@@ -1,0 +1,12 @@
+.DS_Store
+server/*
+!server/.keepfolder
+etc/*
+!etc/.keepfolder
+*.sql
+!server/bin/.keepfolder
+!server/etc/.keepfolder
+!server/etc/worldserver.conf
+!server/etc/authserver.conf
+!server/logs/.keepfolder
+!server/sql/.keepfolder
