@@ -1,6 +1,23 @@
 version: '3.9'
 
 services:
+  authserver:
+    image: pandaria:authserver
+    container_name: pandaria-authserver
+    build:
+      context: authserver
+      dockerfile: Dockerfile
+      args:
+        USER_ID: ${USER_ID:-0}
+        GROUP_ID: ${GROUP_ID:-0}
+    environment:
+      - TZ=Europe/Stockholm
+    ports:
+      - "3724:3724"
+    volumes:
+      - "./server:/opt/server:rw"
+    restart: on-failure
+    tty: true
 
   compile:
     image: pandaria:compile
@@ -22,11 +39,28 @@ services:
       - ${WOW_PATH}:/opt/wow:rw
     restart: on-failure
     tty: true
-    ports:
-      - "3724:3724"
-      - "3443:3443"
-      - "8085:8085"
-      - "8086:8086"
+
+  mysql:
+    image: pandoria:mysql
+      #env_file:
+      # - ./mariadb/mariadb.env
+    container_name: pandoria-mysql
+    hostname: pandaradb
+    build:
+      context: mysql
+      dockerfile: Dockerfile
+      args:
+        USER_ID: ${USER_ID:-0}
+        GROUP_ID: ${GROUP_ID:-0}
+    environment:
+      - MYSQL_ROOT_PASSWORD=pwd
+    # ports:
+    #  - "3306:3306"
+    volumes:
+      - ./server:/opt/server:rw
+      - ./etc:/opt/etc:rw
+    restart: on-failure
+    tty: true
 
   phpmyadmin:
     image: phpmyadmin
@@ -41,6 +75,26 @@ services:
       - compile
     profiles:
       - dev
+  
+  worldserver:
+    image: pandaria:worldserver
+    container_name: pandaria-worldserver
+    build:
+      context: worldserver
+      dockerfile: Dockerfile
+      args:
+        USER_ID: ${USER_ID:-0}
+        GROUP_ID: ${GROUP_ID:-0}
+    environment:
+      - TZ=Europe/Stockholm
+    ports:
+      - "3443:3443"
+      - "8085:8085"
+    # - "8086:8086"
+    volumes:
+      - "./server:/opt/server:rw"
+    restart: on-failure
+    tty: true
 networks:
   default:
     name: pandaria-network
