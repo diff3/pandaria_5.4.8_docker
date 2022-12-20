@@ -27,7 +27,7 @@ cd etc
 git clone https://github.com/alexkulya/pandaria_5.4.8
 cd ..
 
-docker compose up -d
+docker compose up -d compile
 docker exec -it pandaria-compile /bin/bash
 
 # inside docker container
@@ -37,9 +37,20 @@ cd /opt/etc/pandaria_5.4.8/build
 
 cmake .. -DCMAKE_INSTALL_PREFIX=/opt/server -DCMAKE_C_COMPILER=/usr/bin/clang-11 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-11 -DSCRIPTS=static -DWITH_WARNINGS=0
 
+make -j 8
+
 # this will take a long while.
 make install
 
 # all files kan be found at /opt/server
+
+# remove compile
+docker compose down
+
+# start all servers 
+docker compose up -d
+
+# you have to log into mariadb and fix the databases and 
+
 ```
 
