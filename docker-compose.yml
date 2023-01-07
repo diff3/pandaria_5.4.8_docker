@@ -39,6 +39,7 @@ services:
       context: containers/compile
       <<: *build-shared-conf
     <<: *pandaria-shared-conf
+    restart: "no"
     profiles:
       - compile
 
