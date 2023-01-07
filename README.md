@@ -2,15 +2,19 @@
 
 
 
-This docker container will include all dependencies and program to compile and run **[pandaria 5.4.8](https://github.com/alexkulya/pandaria_5.4.8)** in a docker container. Usually you only run one program per container, but you can run the whole server with tmux. I will write an update with seperated container for world, auth and databases. 
+This docker container will include all dependencies and program to compile and run **[pandaria 5.4.8](https://github.com/alexkulya/pandaria_5.4.8)** in a docker container. With seperated containers for compile, mariadb, authserver and worldserver. It also has a phpmyadmin container for easy database editing.
 
 
 
-It does not compile everything automatecly, so you have to log into the container to start the compile.
+It does compile and create database automatecly, but at the monent you need to update the config files otherwise it wont connect to database.
 
 
 
 dbc, maps, mmaps and vmaps can be downloaded from **[pandaria 5.4.8](https://github.com/alexkulya/pandaria_5.4.8)**
+
+
+
+The containers will not work on Mac silicon M1 because MySQL 5 does not got any install cantidate on Debian arm. 
 
 
 
@@ -20,37 +24,31 @@ dbc, maps, mmaps and vmaps can be downloaded from **[pandaria 5.4.8](https://git
 
 ### Linux
 
+Tested on Debian 11, Arch and Majarno linux
+Dependencies: docker and git
+
+
+
 ```bash
-https://github.com/diff3/pandaria_5.4.8_docker
+git clone https://github.com/diff3/pandaria_5.4.8_docker
 cd pandaria_5.4.8_docker
-cd etc
-git clone https://github.com/alexkulya/pandaria_5.4.8
-cd ..
 
-docker compose up -d compile
-docker exec -it pandaria-compile /bin/bash
+# compile
+docker compose up -d compile && docker compose down
 
-# inside docker container
-
-mkdir -p /opt/etc/pandaria_5.4.8/build
-cd /opt/etc/pandaria_5.4.8/build
-
-cmake .. -DCMAKE_INSTALL_PREFIX=/opt/server -DCMAKE_C_COMPILER=/usr/bin/clang-11 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-11 -DSCRIPTS=static -DWITH_WARNINGS=0
-
-make -j 8
-
-# this will take a long while.
-make install
-
-# all files kan be found at /opt/server
-
-# remove compile
-docker compose down
-
-# start all servers 
+# start authserver, mariadb and worldserver
 docker compose up -d
 
-# you have to log into mariadb and fix the databases and 
+# start phpmyadmin
+docker compose up -d phpmyadmin
 
+# stop servers
+docker compose stop
+
+# start server
+docker compose start
+
+# remove servers
+docker compose down
 ```
 
