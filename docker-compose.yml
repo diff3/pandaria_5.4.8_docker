@@ -1,68 +1,61 @@
 version: '3.9'
 
+x-pandaria-shared-conf: &pandaria-shared-conf
+  environment:
+      - TZ=Europe/Stockholm
+  volumes:
+    - "./etc:/opt/etc:rw"
+    - "/etc/localtime:/etc/localtime:ro"
+    - "/etc/timezone:/etc/timezone:ro"
+    - "./server:/opt/server:rw"
+    - "${WOW_PATH}:/opt/wow:rw"
+  restart: unless-stopped
+  tty: true
+
+x-build-shared-conf: &build-shared-conf
+  dockerfile: Dockerfile
+  args:
+    USER_ID: ${USER_ID:-0}
+    GROUP_ID: ${GROUP_ID:-0}
+
 services:
   authserver:
     image: pandaria:authserver
     container_name: pandaria-authserver
     build:
-      context: authserver
-      dockerfile: Dockerfile
-      args:
-        USER_ID: ${USER_ID:-0}
-        GROUP_ID: ${GROUP_ID:-0}
-    environment:
-      - TZ=Europe/Stockholm
+      context: containers/authserver
+      <<: *build-shared-conf
+    <<: *pandaria-shared-conf
     ports:
       - "3724:3724"
-    volumes:
-      - "./server:/opt/server:rw"
-    restart: on-failure
-    tty: true
 
   compile:
     image: pandaria:compile
     env_file:
-      - ./compile/compile.env
-    container_name: pandaria-compile
+      - ./containers/compile/compile.env
+    container_name: containers/pandaria-compile
     hostname: compile
     build:
       context: compile
-      dockerfile: Dockerfile
-      args:
-        USER_ID: ${USER_ID:-0}
-        GROUP_ID: ${GROUP_ID:-0}
-    environment:
-      - TZ=Europe/Stockholm
-    volumes:
-      - ./server:/opt/server:rw
-      - ./etc:/opt/etc:rw
-      - ${WOW_PATH}:/opt/wow:rw
-    restart: on-failure
-    tty: true
+      <<: *build-shared-conf
+    <<: *pandaria-shared-conf
+    profiles:
+      - compile
 
   mariadb:
     image: pandoria:mmariadb
     env_file:
-      - ./mariadb/mariadb.env
+      - ./containers/mariadb/mariadb.env
     container_name: pandoria-mariadb
     hostname: pandaradb
     build:
-      context: mariadb
-      dockerfile: Dockerfile
-      args:
-        USER_ID: ${USER_ID:-0}
-        GROUP_ID: ${GROUP_ID:-0}
+      context: containers/mariadb
+      <<: *build-shared-conf
+    <<: *pandaria-shared-conf
     command: --max_allowed_packet=32505856
-    environment:
-      - MYSQL_ROOT_PASSWORD=pwd
     # ports:
     #  - "3306:3306"
-    volumes:
-      - ./server:/opt/server:rw
-      - ./etc:/opt/etc:rw
-    restart: on-failure
-    tty: true
-
+   
   phpmyadmin:
     image: phpmyadmin
     ports:
@@ -81,21 +74,14 @@ services:
     image: pandaria:worldserver
     container_name: pandaria-worldserver
     build:
-      context: worldserver
-      dockerfile: Dockerfile
-      args:
-        USER_ID: ${USER_ID:-0}
-        GROUP_ID: ${GROUP_ID:-0}
-    environment:
-      - TZ=Europe/Stockholm
+      context: containers/worldserver
+      <<: *build-shared-conf
+    <<: *pandaria-shared-conf
     ports:
       - "3443:3443"
       - "8085:8085"
     # - "8086:8086"
-    volumes:
-      - "./server:/opt/server:rw"
-    restart: on-failure
-    tty: true
+
 networks:
   default:
     name: pandaria-network
