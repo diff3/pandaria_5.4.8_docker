@@ -40,18 +40,19 @@ services:
     restart: on-failure
     tty: true
 
-  mysql:
-    image: pandoria:mysql
-      #env_file:
-      # - ./mariadb/mariadb.env
-    container_name: pandoria-mysql
+  mariadb:
+    image: pandoria:mmariadb
+    env_file:
+      - ./mariadb/mariadb.env
+    container_name: pandoria-mariadb
     hostname: pandaradb
     build:
-      context: mysql
+      context: mariadb
       dockerfile: Dockerfile
       args:
         USER_ID: ${USER_ID:-0}
         GROUP_ID: ${GROUP_ID:-0}
+    command: --max_allowed_packet=32505856
     environment:
       - MYSQL_ROOT_PASSWORD=pwd
     # ports:
@@ -67,12 +68,12 @@ services:
     ports:
       - "8080:80"
     environment:
-      - PMA_HOST=trinitydb
+      - PMA_HOST=pandaradb
       - PMA_USER=root
       - PMA_PASSWORD=pwd
     restart: "no"
     depends_on:
-      - compile
+      - mariadb
     profiles:
       - dev
   
