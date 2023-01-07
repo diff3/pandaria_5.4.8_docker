@@ -11,6 +11,5 @@ RUN wget https://repo.mysql.com/apt/ubuntu/pool/mysql-5.7/m/mysql-community/libm
 RUN dpkg -i /tmp/libmysqlclient-dev_5.7.40-1ubuntu18.04_amd64.deb
 
 COPY --chmod=755 entry.sh / 
-# CMD /entry.sh
+ENTRYPOINT ["/entry"]
 
-CMD /bin/bash
