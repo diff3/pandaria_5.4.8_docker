@@ -39,10 +39,10 @@ if [ ! -f "/opt/server/etc/authserver.conf" ]; then
    cp /opt/server/etc/authserver.conf.dist /opt/server/etc/authserver.conf
 
    sed -i -e "/LogsDir =/ s/= .*/= $(escape $LOGS_DIR_PATH)/" $CONFIG_PATH/authserver.conf
-   sed -i -e "/LoginDatabaseInfo =/ s/= .*/= \"$(escape $DB_CONTAINER)\;3306\;$(escape $SERVER_DB_USER)\;$(escape $SERVER_DB_PWD)\;realmd\"/" $CONFIG_PATH/authserver.conf
+   sed -i -e "/LoginDatabaseInfo =/ s/= .*/= \"$(escape $DB_CONTAINER)\;3306\;$(escape $SERVER_DB_USER)\;$(escape $SERVER_DB_PWD)\;auth\"/" $CONFIG_PATH/authserver.conf
 fi
 
-if [ ! -f "/opt/server/etc/authserver.conf" ]; then
+if [ ! -f "/opt/server/etc/worldserver.conf" ]; then
    echo "updating worldserver.conf files"
    cp /opt/server/etc/worldserver.conf.dist /opt/server/etc/worldserver.conf
 
