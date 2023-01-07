@@ -27,7 +27,14 @@ The containers will not work on Mac silicon M1 because MySQL 5 does not got any 
 Tested on Debian 11, Arch and Majarno linux
 Dependencies: docker and git
 
+Quickie!
 
+Place dbc, maps, mmaps and vmaps in 'server/data' dir
+ctrl-c to exit log view
+
+```bash
+docker compose up --build compile && docker compose down && docker compose up -d && docker compose logs -f
+```
 
 ```bash
 git clone https://github.com/diff3/pandaria_5.4.8_docker
