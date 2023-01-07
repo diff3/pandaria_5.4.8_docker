@@ -32,7 +32,8 @@ services:
   compile:
     image: pandaria:compile
     env_file:
-      - ./containers/compile/compile.env
+      - ./env/compile.env
+      - ./env/mariadb.env
     container_name: pandaria-compile
     build:
       context: containers/compile
@@ -42,10 +43,10 @@ services:
       - compile
 
   mariadb:
-    image: pandoria:mmariadb
+    image: pandaria:mmariadb
     env_file:
-      - ./containers/mariadb/mariadb.env
-    container_name: pandoria-mariadb
+      - ./env/mariadb.env
+    container_name: pandaria-mariadb
     hostname: pandaradb
     build:
       context: containers/mariadb
