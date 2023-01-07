@@ -44,7 +44,7 @@ services:
       - compile
 
   mariadb:
-    image: pandaria:mmariadb
+    image: pandaria:mariadb
     env_file:
       - ./env/mariadb.env
     container_name: pandaria-mariadb

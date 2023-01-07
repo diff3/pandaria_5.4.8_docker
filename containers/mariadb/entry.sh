@@ -63,8 +63,12 @@ mysql -u $MYSQL_USERNAME -p$MYSQL_PASSWORD auth -e "INSERT INTO account (id, use
 mysql -u $MYSQL_USERNAME -p$MYSQL_PASSWORD auth -e "INSERT INTO account_access (id, gmlevel , RealmID) VALUES (1, 100, -1)";
 
 echo "Update realmd info"
-mysql -u $MYSQL_USERNAME -p$MYSQL_PASSWORD auth -e "DELETE FROM realmlist WHERE id='2';"
-mysql -u $MYSQL_USERNAME -p$MYSQL_PASSWORD auth -e "UPDATE realmlist SET NAME='$REALM_NAME',project_shortname='$REALM_NAME', address='$REALM_ADRESS', port='$REALM_PORT', icon='$REALM_ICON', flag='$REALM_FLAG', timezone='$REALM_TIMEZONE', allowedSecurityLevel='$REALM_SECURITY', population='$REALM_POP', gamebuild='$REALM_BUILD' WHERE id = '1';"
+mysql -u $MYSQL_USERNAME -p$MYSQL_PASSWORD auth -e "DELETE FROM realmlist;"
+# mysql -u $MYSQL_USERNAME -p$MYSQL_PASSWORD auth -e "UPDATE realmlist SET NAME='$REALM_NAME',project_shortname='$REALM_NAME', address='$REALM_ADRESS', port='$REALM_PORT', icon='$REALM_ICON', flag='$REALM_FLAG', timezone='$REALM_TIMEZONE', allowedSecurityLevel='$REALM_SECURITY', population='$REALM_POP', gamebuild='$REALM_BUILD' WHERE id = '1';"
+
+mysql -u $MYSQL_USERNAME -p$MYSQL_PASSWORD auth -e "INSERT INTO `realmlist` (`id`, `name`, `project_shortname`, `address`, `port`, `icon`, `color`, `timezone`, `allowedSecurityLevel`, `population`, `gamebuild`, `flag`, `project_hidden`, `project_enabled`, `project_dbname`, `project_dbworld`, `project_dbarchive`, `project_rates_min`, `project_rates_max`, `project_transfer_level_max`, `project_transfer_items`, `project_transfer_skills_spells`, `project_transfer_glyphs`, `project_transfer_achievements`, `project_server_same`, `project_server_settings`, `project_server_remote_path`, `project_accounts_detach`, `project_setskills_value_max`, `project_chat_enabled`, `project_statistics_enabled`) VALUES
+(1, '$REALM_NAME', '$REALM_NAME', '$REALM_ADDRESS', '$REALM_PORT', $REALM_ICON, $REALM_COLOR, $REALM_TIMEZONE, $REALM_SECURITY, $REALM_POP, $REALM_BUILD, $REALM_FLAG, 0, 1, '', '', '', 0, 0, 80, 'IGNORE', 'IGNORE', 'IGNORE', 'IGNORE', 0, '0', '0', 1, 0, 0, 0);"
+
 
 echo "Removing files"
 yes | rm -r /tmp/*.sql
