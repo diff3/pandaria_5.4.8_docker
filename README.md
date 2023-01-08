@@ -2,23 +2,19 @@
 
 
 
-This docker container will include all dependencies and program to compile and run **[pandaria 5.4.8](https://github.com/alexkulya/pandaria_5.4.8)** in a docker container. With seperated containers for compile, mariadb, authserver and worldserver. It also has a phpmyadmin container for easy database editing.
+This docker container will include all dependencies to compile and run [**pandaria 5.4.8**](https://github.com/alexkulya/pandaria_5.4.8) in a docker container. With separate containers for compile, MariaDB, Authserver, and Worldserver. It also has a PHPMyAdmin container for easy database editing.
 
+It does compile and creates the databases automatically. It also makes a basic configuration of worldserver.conf and authserver.conf when you  compiled the server. Just enough to log in on your computer. 
 
+You can use 'telnet localhost 3443' with admin:admin to create more accounts.
 
-It does compile and create database automatecly, it also make a basic configure of worldserver.conf and authserver.conf then your are compiling server. Just enough to log in on your own computer. 
+Before you start the server, you need to place dbc, maps, vmaps, and mmaps in the server/data directory. They can all be downloaded from [**pandaria 5.4.8**](https://github.com/alexkulya/pandaria_5.4.8) 
 
+The containers will not work on Mac silicon M1 because MySQL 5 does not have any install candidate on Debian arm. 
 
+I don't use Windows, so I can't test if it work, probebly not without some modifications.
 
-You can use 'telnet localhost 3443' with admin:admin to create more accounts. 
-
-
-
-dbc, maps, mmaps and vmaps can be downloaded from **[pandaria 5.4.8](https://github.com/alexkulya/pandaria_5.4.8)** and are needed to be placed in server/data directory.
-
-
-
-The containers will not work on Mac silicon M1 because MySQL 5 does not got any install cantidate on Debian arm. 
+Before starting MariaDB check mariadb.env file in the env folder. If you want access from some other computer then local you need to add your computer IP number instead of 127.0.0.1
 
 
 
