@@ -4,8 +4,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y tzdata libssl1.1 libboost-all-dev libace-dev libreadline-dev
 
 WORKDIR /opt/wow
-RUN cp /opt/server/bin/m* /opt/wow && cp /opt/server/vmap* /opt/wow
-RUN sysctl -w kernel.core_pattern=/tmp/core-%e.%p.%h.%t
 
 ENTRYPOINT [ "/bin/bash" ]
 
