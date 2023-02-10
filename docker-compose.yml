@@ -43,6 +43,17 @@ services:
     profiles:
       - compile
 
+   extractor:
+    image: pandaria:extractor
+    container_name: pandaria-extractor
+    build:
+      context: containers/extractor
+      <<: *build-shared-conf
+    <<: *pandaria-shared-conf
+    restart: "no"
+    profiles:
+      - extractor
+
   mariadb:
     image: pandaria:mariadb
     env_file:
@@ -56,7 +67,7 @@ services:
     command: --max_allowed_packet=32505856
     # ports:
     #  - "3306:3306"
-   
+
   phpmyadmin:
     image: phpmyadmin
     ports:
@@ -70,7 +81,7 @@ services:
       - mariadb
     profiles:
       - dev
-  
+
   worldserver:
     image: pandaria:worldserver
     container_name: pandaria-worldserver
