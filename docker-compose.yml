@@ -43,7 +43,7 @@ services:
     profiles:
       - compile
 
-   extractor:
+  extractor:
     image: pandaria:extractor
     container_name: pandaria-extractor
     build:
