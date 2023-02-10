@@ -4,18 +4,19 @@
 
 This docker container will include all dependencies to compile and run [**pandaria 5.4.8**](https://github.com/alexkulya/pandaria_5.4.8) in a docker container. With separate containers for compile, MariaDB, Authserver, and Worldserver. It also has a PHPMyAdmin container for easy database editing.
 
-It does compile and creates the databases automatically. It also makes a basic configuration of worldserver.conf and authserver.conf when you  compiled the server. Just enough to log in on your computer. 
+It does compile and creates the databases automatically. It also makes a basic configuration of worldserver.conf and authserver.conf when you  compiled the server. Just enough to log in on your computer.
 
 You can use 'telnet localhost 3443' with admin:admin to create more accounts.
 
-Before you start the server, you need to place dbc, maps, vmaps, and mmaps in the server/data directory. They can all be downloaded from [**pandaria 5.4.8**](https://github.com/alexkulya/pandaria_5.4.8) 
+Before you start the server, you need to place dbc, maps, vmaps, and mmaps in the server/data directory. They can all be downloaded from [**pandaria 5.4.8**](https://github.com/alexkulya/pandaria_5.4.8)
 
-The containers will not work on Mac silicon M1 because MySQL 5 does not have any install candidate on Debian arm. 
+The containers will not work on Mac silicon M1 because MySQL 5 does not have any install candidate on Debian arm.
 
 I don't use Windows, so I can't test if it work, probebly not without some modifications.
 
 Before starting MariaDB check mariadb.env file in the env folder. If you want access from some other computer then local you need to add your computer IP number instead of 127.0.0.1
 
+extractor container got a way to dump core if needed, see https://stackoverflow.com/a/69832851 for more information. 
 
 
 ## Install  
@@ -66,4 +67,3 @@ docker compose start
 # remove servers
 docker compose down
 ```
-

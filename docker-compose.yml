@@ -50,6 +50,14 @@ services:
       context: containers/extractor
       <<: *build-shared-conf
     <<: *pandaria-shared-conf
+    volumes:
+      - "/tmp:/tmp"
+      - "./server:/opt/server:rw"
+      - "${WOW_PATH}:/opt/wow:rw"
+      - "./etc:/opt/etc:rw"
+    privileged: true
+    ulimits:
+      core: -1
     restart: "no"
     profiles:
       - extractor
