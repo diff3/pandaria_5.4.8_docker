@@ -10,3 +10,4 @@ etc/*
 !server/etc/authserver.conf
 !server/logs/.keepfolder
 !server/sql/.keepfolder
+*.bk

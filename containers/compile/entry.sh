@@ -5,30 +5,36 @@ escape() {
   echo "$tmp"
 }
 
-if [ ! -d "/opt/etc/pandaria_5.4.8" ]; then
+if [ ! -d "$SOURCE_PREFIX" ]; then
    cd /opt/etc
-   git clone https://github.com/alexkulya/pandaria_5.4.8
-   mkdir -p /opt/etc/pandaria_5.4.8/build
+   git clone $GIT_URL_SOURCE $SOURCE_PREFIX
 else
-   cd /opt/etc/pandaria_5.4.8
+   cd $SOURCE_PREFIX
    git pull
 fi
 
-if [ ! -d "/opt/server/logs" ]; then
-   mkdir -p /opt/server/logs
+if [ ! -d "$INSTALL_PREFIX/logs" ]; then
+   mkdir -p $INSTALL_PREFIX/logs
 fi
 
-if [ ! -d "/opt/server/etc" ]; then
-   mkdir -p /opt/server/etc
+if [ ! -d "$INSTALL_PREFIX/etc" ]; then
+   mkdir -p $INSTALL_PREFIX/etc
 fi
 
+if [ ! -d "$SOURCE_PREFIX/build" ]; then
+   mkdir -p $SOURCE_PREFIX/build
+fi
 
-cd /opt/etc/pandaria_5.4.8/build
+cd $SOURCE_PREFIX/build
 
-cmake .. -DCMAKE_INSTALL_PREFIX=/opt/server -DCMAKE_C_COMPILER=/usr/bin/clang-11 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-11 -DSCRIPTS=static -DWITH_WARNINGS=0 -DTOOLS=0 -DCMAKE_CXX_FLAGS=-pthread
+cmake .. -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -DCMAKE_C_COMPILER=$CMAKE_C_COMPILER -DCMAKE_CXX_COMPILER=$CMAKE_CXX_COMPILER -DSCRIPTS=$SCRIPTS -DWITH_WARNINGS=$WARNINGS -DTOOLS=$EXTRACTORS -DCMAKE_CXX_FLAGS=$CMAKE_CXX_FLAGS
 
 make clean
-make -j $(nproc) install
+
+if [ $MAKE_INSTALL -eq 1 ];then
+   echo "Make install"
+   make -j $(nproc) install
+fi
 
 if [ ! -f "/opt/server/etc/authserver.conf" ]; then
    echo "updating authserver.conf files"
@@ -59,4 +65,9 @@ if [ ! -f "/opt/server/etc/worldserver.conf" ]; then
 
    sed -i -e "/SOAP.Enabled =/ s/= .*/= $(escape $SOAP_ENABLE)/" $CONFIG_PATH/worldserver.conf
    sed -i -e "/SOAP.IP =/ s/= .*/= $(escape $SOAP_IP)/" $CONFIG_PATH/worldserver.conf
+fi
+
+if [ $MAKE_INSTALL -eq 0 ]; then
+   echo "Open shell"
+   /bin/bash
 fi

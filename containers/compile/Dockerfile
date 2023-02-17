@@ -1,7 +1,7 @@
 FROM debian:bullseye-slim
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y tzdata vim tmux git clang libreadline-dev cmake libssl-dev make gcc g++  libboost-all-dev libace-dev wget lsb-release gnupg libbz2-dev bzip2 zip unzip
+RUN apt-get update && apt-get install -y tzdata vim tmux git clang libreadline-dev cmake libssl-dev make gcc g++ libboost-all-dev libace-dev wget lsb-release gnupg libbz2-dev
 
 RUN echo 'deb http://repo.mysql.com/apt/ubuntu bionic mysql-5.7' > /etc/apt/sources.list.d/mysql.list
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 467B942D3A79BD29
