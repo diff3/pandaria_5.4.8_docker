@@ -67,14 +67,14 @@ services:
     env_file:
       - ./env/mariadb.env
     container_name: pandaria-mariadb
-    hostname: pandaradb
+    hostname: pandariadb
     build:
       context: containers/mariadb
       <<: *build-shared-conf
     <<: *pandaria-shared-conf
     command: --max_allowed_packet=32505856
-    # ports:
-    #  - "3306:3306"
+    ports:
+     - "3336:3306"
 
   phpmyadmin:
     image: phpmyadmin

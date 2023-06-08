@@ -10,3 +10,5 @@ RUN apt-get update && apt-get install -y libmysqlclient20 libmysqlclient-dev
 
 WORKDIR /opt/server/bin
 ENTRYPOINT [ "./authserver" ]
+# ENTRYPOINT [ "/bin/bash" ]
+

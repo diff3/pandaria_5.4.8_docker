@@ -9,4 +9,5 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 467B942D3A79BD29
 RUN apt-get update && apt-get install -y libmysqlclient20 libmysqlclient-dev
 
 WORKDIR /opt/server/bin
+# ENTRYPOINT [ "/bin/bash" ]
 ENTRYPOINT [ "./worldserver" ]
