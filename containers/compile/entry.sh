@@ -10,6 +10,7 @@ if [ ! -d "$SOURCE_PREFIX" ]; then
    git clone $GIT_URL_SOURCE $SOURCE_PREFIX
 else
    cd $SOURCE_PREFIX
+   git config --global --add safe.directory /opt/etc/pandaria_5.4.8
    git pull
 fi
 
