@@ -3,11 +3,13 @@ version: '3.9'
 x-pandaria-shared-conf: &pandaria-shared-conf
   environment:
       - TZ=Europe/Stockholm
+      - MAPS=ON
+      - VMAPS=ON
+      - MMAPS=ON
   volumes:
     - "./build:/opt/build:rw"
     - "./server:/opt/server:rw"
     - "${WOW_PATH}:/opt/wow:rw"
-    # - "mariadb:/var/lib/mysql" 
   restart: unless-stopped
   tty: true
 
@@ -99,7 +101,7 @@ services:
     ports:
       - "3443:3443"
       - "8085:8085"
-    # - "8086:8086"
+      - "8086:8086"
 
 networks:
   default:

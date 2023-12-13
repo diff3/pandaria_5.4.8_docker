@@ -48,12 +48,13 @@ fi
 
 cd /tmp
 unzip 2023_12_10_world.zip
-
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD world < /tmp/2023_12_10_world.sql
 
 cat /opt/build/pandaria_5.4.8/sql/updates/auth/*.sql > /tmp/auth.sql
 cat /opt/build/pandaria_5.4.8/sql/updates/characters/*.sql > /tmp/characters.sql
 cat /opt/build/pandaria_5.4.8/sql/updates/world/*.sql > /tmp/world.sql
+cat /opt/build/pandaria_5.4.8/sql/updates/world/battlepay/*.sql >> /tmp/world.sql
+cat /opt/build/pandaria_5.4.8/sql/updates/world/localization/enUS/*.sql >> /tmp/world.sql
 
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD auth < /tmp/auth.sql
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD characters < /tmp/characters.sql
