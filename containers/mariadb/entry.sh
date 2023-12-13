@@ -43,10 +43,11 @@ mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD world < /tmp/world_04_03_2023.sql
 
 # download world db if needed.
 if [ ! -f "/opt/build/2023_12_10_world.zip" ]; then 
-	curl https://github.com/alexkulya/pandaria_5.4.8/releases/download/%23pandaria548world/2023_12_10_world.zip --output /opt/build/2023_12_10_world.zip
+	wget https://github.com/alexkulya/pandaria_5.4.8/releases/download/%23pandaria548world/2023_12_10_world.zip -O /tmp/2023_12_10_world.zip
 fi
 
-unzip /opt/build/2023_12_10_world.zip /tmp/
+cd /tmp
+unzip 2023_12_10_world.zip
 
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD world < /tmp/2023_12_10_world.sql
 
@@ -58,7 +59,7 @@ mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD auth < /tmp/auth.sql
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD characters < /tmp/characters.sql
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD world < /tmp/world.sql
 
-# mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD auth < /opt/build/pandaria_5.4.8/sql/old/auth/auth.currency_transactions.sql
+mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD auth < /opt/build/pandaria_5.4.8/sql/old/auth/auth.currency_transactions.sql
 
 echo "User cleanup"
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD auth -e "DELETE FROM account"

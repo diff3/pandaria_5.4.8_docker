@@ -6,11 +6,11 @@ escape() {
 }
 
 if [ ! -d "$SOURCE_PREFIX" ]; then
-   cd /opt/etc
+   cd /opt/build
    git clone $GIT_URL_SOURCE $SOURCE_PREFIX
 else
    cd $SOURCE_PREFIX
-   git config --global --add safe.directory /opt/etc/pandaria_5.4.8
+   git config --global --add safe.directory /opt/build/pandaria_5.4.8
    git pull
 fi
 

@@ -7,6 +7,7 @@ x-pandaria-shared-conf: &pandaria-shared-conf
     - "./build:/opt/build:rw"
     - "./server:/opt/server:rw"
     - "${WOW_PATH}:/opt/wow:rw"
+    # - "mariadb:/var/lib/mysql" 
   restart: unless-stopped
   tty: true
 
@@ -71,8 +72,6 @@ services:
       <<: *build-shared-conf
     <<: *pandaria-shared-conf
     command: --max_allowed_packet=32505856
-    volumes:
-      - build/mysql:/var/lib/mysql
     ports:
      - "3336:3306"
 
