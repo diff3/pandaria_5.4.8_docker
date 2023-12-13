@@ -2,10 +2,12 @@ version: '3.9'
 
 x-pandaria-shared-conf: &pandaria-shared-conf
   environment:
-      - TZ=Europe/Stockholm
+      - TZ=Europe/London
       - MAPS=ON
       - VMAPS=ON
       - MMAPS=ON
+      - CONVERTED_USER_ID=0
+      - CONVERTED_GROUP_ID=0
   volumes:
     - "./build:/opt/build:rw"
     - "./server:/opt/server:rw"
@@ -15,9 +17,9 @@ x-pandaria-shared-conf: &pandaria-shared-conf
 
 x-build-shared-conf: &build-shared-conf
   dockerfile: Dockerfile
-  args:
-    USER_ID: ${USER_ID:-0}
-    GROUP_ID: ${GROUP_ID:-0}
+  #args:
+   # USER_ID: ${USER_ID}
+    #GROUP_ID: ${GROUP_ID}
 
 services:
   authserver:
@@ -63,14 +65,15 @@ services:
     profiles:
       - extractor
 
-  mariadb:
+  sql:
     image: pandaria:mariadb
     env_file:
       - ./env/mariadb.env
-    container_name: pandaria-mariadb
+      - ./env/compile.env
+    container_name: pandariadb
     hostname: pandariadb
     build:
-      context: containers/mariadb
+      context: containers/sql
       <<: *build-shared-conf
     <<: *pandaria-shared-conf
     command: --max_allowed_packet=32505856
@@ -87,7 +90,7 @@ services:
       - PMA_PASSWORD=pwd
     restart: "no"
     depends_on:
-      - mariadb
+      - sql
     profiles:
       - dev
 

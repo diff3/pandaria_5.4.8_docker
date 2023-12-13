@@ -1,3 +1,3 @@
 #!/bin/sh
 
-docker exec -i pandaria-mariadb mariadb -u root -ppwd < pandaria.sql
+docker exec -i pandariadb mariadb -u root -ppwd < pandaria.sql
