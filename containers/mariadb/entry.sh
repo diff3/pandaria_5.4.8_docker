@@ -4,24 +4,22 @@ echo "Starting Initialization of CMaNGOS DB..."
 
 echo "Check database sql files"
 
-if [ ! -d "/opt/etc/pandaria_5.4.8" ]; then
-	git clone https://github.com/alexkulya/pandaria_5.4.8 /opt/etc/pandaria_5.4.8
+if [ ! -d "/opt/build/pandaria_5.4.8" ]; then
+	git clone https://github.com/alexkulya/pandaria_5.4.8 /opt/build/pandaria_5.4.8
 else
-	cd /opt/etc/pandaria_5.4.8
-	git config --global --add safe.directory /opt/etc/pandaria_5.4.8
+	cd /opt/build/pandaria_5.4.8
+	git config --global --add safe.directory /opt/build/pandaria_5.4.8
 	git pull
 	cd /
 fi
 
 echo "Removing old database and users"
-# mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD -e "DROP DATABASE IF EXISTS archive;"
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD -e "DROP DATABASE IF EXISTS auth;"
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD -e "DROP DATABASE IF EXISTS characters"
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD -e "DROP DATABASE IF EXISTS world"
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD -e "DROP USER IF EXISTS pandaria"
 
 echo "Creating databases"
-# mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD -e "CREATE DATABASE archive;"
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD -e "CREATE DATABASE auth;"
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD -e "CREATE DATABASE characters"
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD -e "CREATE DATABASE world"
@@ -29,35 +27,38 @@ mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD -e "CREATE DATABASE world"
 echo "Creat user"
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD -e "CREATE USER 'pandaria'@'%' IDENTIFIED BY 'pandaria';"
 
-# mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD -e "GRANT ALL PRIVILEGES ON archive.* to 'pandaria'@'%';"
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD -e "GRANT ALL PRIVILEGES ON auth.* to 'pandaria'@'%';"
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD -e "GRANT ALL PRIVILEGES ON characters.* to 'pandaria'@'%';"
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD -e "GRANT ALL PRIVILEGES ON world.* to 'pandaria'@'%';"
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD -e "FLUSH PRIVILEGES;"
 
 echo "Populate database"
-# mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD archive < /opt/etc/pandaria_5.4.8/sql/base/archive_04_03_2023.sql
-
-unzip /opt/etc/pandaria_5.4.8/sql/base/auth_04_03_2023.zip -d /tmp
-unzip /opt/etc/pandaria_5.4.8/sql/base/characters_04_03_2023.zip -d /tmp
-unzip /opt/etc/pandaria_5.4.8/sql/base/world_04_03_2023.zip -d /tmp
+unzip /opt/build/pandaria_5.4.8/sql/base/auth_04_03_2023.zip -d /tmp
+unzip /opt/build/pandaria_5.4.8/sql/base/characters_04_03_2023.zip -d /tmp
+unzip /opt/build/pandaria_5.4.8/sql/base/world_04_03_2023.zip -d /tmp
 
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD auth < /tmp/auth_04_03_2023.sql
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD characters < /tmp/characters_04_03_2023.sql
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD world < /tmp/world_04_03_2023.sql
 
-# 7z e /opt/etc/pandaria_5.4.8/sql/base/world.7z -o/tmp
-# mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD world < /tmp/world.sql
+# download world db if needed.
+if [ ! -f "/opt/build/2023_12_10_world.zip" ]; then 
+	curl https://github.com/alexkulya/pandaria_5.4.8/releases/download/%23pandaria548world/2023_12_10_world.zip --output /opt/build/2023_12_10_world.zip
+fi
 
-cat /opt/etc/pandaria_5.4.8/sql/updates/auth/*.sql > /tmp/auth.sql
-cat /opt/etc/pandaria_5.4.8/sql/updates/characters/*.sql > /tmp/characters.sql
-cat /opt/etc/pandaria_5.4.8/sql/updates/world/*.sql > /tmp/world.sql
+unzip /opt/build/2023_12_10_world.zip /tmp/
+
+mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD world < /tmp/2023_12_10_world.sql
+
+cat /opt/build/pandaria_5.4.8/sql/updates/auth/*.sql > /tmp/auth.sql
+cat /opt/build/pandaria_5.4.8/sql/updates/characters/*.sql > /tmp/characters.sql
+cat /opt/build/pandaria_5.4.8/sql/updates/world/*.sql > /tmp/world.sql
 
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD auth < /tmp/auth.sql
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD characters < /tmp/characters.sql
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD world < /tmp/world.sql
 
-mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD auth < /opt/etc/pandaria_5.4.8/sql/old/auth/auth.currency_transactions.sql
+# mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD auth < /opt/build/pandaria_5.4.8/sql/old/auth/auth.currency_transactions.sql
 
 echo "User cleanup"
 mariadb -u $MYSQL_USERNAME -p$MYSQL_PASSWORD auth -e "DELETE FROM account"

@@ -4,9 +4,7 @@ x-pandaria-shared-conf: &pandaria-shared-conf
   environment:
       - TZ=Europe/Stockholm
   volumes:
-    - "./etc:/opt/etc:rw"
-    - "/etc/localtime:/etc/localtime:ro"
-    - "/etc/timezone:/etc/timezone:ro"
+    - "./build:/opt/build:rw"
     - "./server:/opt/server:rw"
     - "${WOW_PATH}:/opt/wow:rw"
   restart: unless-stopped
@@ -54,7 +52,7 @@ services:
       - "/tmp:/tmp"
       - "./server:/opt/server:rw"
       - "${WOW_PATH}:/opt/wow:rw"
-      - "./etc:/opt/etc:rw"
+      - "./build:/opt/build:rw"
     privileged: true
     ulimits:
       core: -1
@@ -73,6 +71,8 @@ services:
       <<: *build-shared-conf
     <<: *pandaria-shared-conf
     command: --max_allowed_packet=32505856
+    volumes:
+      - build/mysql:/var/lib/mysql
     ports:
      - "3336:3306"
 
