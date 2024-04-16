@@ -11,6 +11,21 @@ if [ ! -d "$SOURCE_PREFIX" ]; then
 else
    cd $SOURCE_PREFIX
    git config --global --add safe.directory /opt/build/pandaria_5.4.8
+   
+   if [ "$USEBRANCH" -eq 1 ]; then
+      echo "Using branch"
+
+      if ! git show-ref --verify --quiet "refs/heads/$BRANCH"; then
+         echo "Creating branch"
+	 git checkout -b $BRANCH $GIT_TAG
+      else
+        echo "Switching branch" 
+	git checkout $BRANCH
+      fi
+   else
+      echo "using main"
+   fi
+
    git pull
 fi
 

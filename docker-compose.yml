@@ -3,23 +3,14 @@ version: '3.9'
 x-pandaria-shared-conf: &pandaria-shared-conf
   environment:
       - TZ=Europe/London
-      - MAPS=ON
-      - VMAPS=ON
-      - MMAPS=ON
       - CONVERTED_USER_ID=0
       - CONVERTED_GROUP_ID=0
   volumes:
-    - "./build:/opt/build:rw"
-    - "./server:/opt/server:rw"
-    - "${WOW_PATH}:/opt/wow:rw"
+    - "./build:/opt/build:rw,uid=0,gid=0"
+    - "./server:/opt/server:rw,uid=0,gid=0"
+    - "${WOW_PATH}:/opt/wow:rw,uid=0,gid=0"
+  tty: True
   restart: unless-stopped
-  tty: true
-
-x-build-shared-conf: &build-shared-conf
-  dockerfile: Dockerfile
-  #args:
-   # USER_ID: ${USER_ID}
-    #GROUP_ID: ${GROUP_ID}
 
 services:
   authserver:
@@ -27,7 +18,7 @@ services:
     container_name: pandaria-authserver
     build:
       context: containers/authserver
-      <<: *build-shared-conf
+      dockerfile: Dockerfile
     <<: *pandaria-shared-conf
     ports:
       - "3724:3724"
@@ -40,7 +31,7 @@ services:
     container_name: pandaria-compile
     build:
       context: containers/compile
-      <<: *build-shared-conf
+      dockerfile: Dockerfile
     <<: *pandaria-shared-conf
     restart: "no"
     profiles:
@@ -49,9 +40,11 @@ services:
   extractor:
     image: pandaria:extractor
     container_name: pandaria-extractor
+    env_file:
+      - ./env/extractor.env
     build:
       context: containers/extractor
-      <<: *build-shared-conf
+      dockerfile: Dockerfile
     <<: *pandaria-shared-conf
     volumes:
       - "/tmp:/tmp"
@@ -74,11 +67,13 @@ services:
     hostname: pandariadb
     build:
       context: containers/sql
-      <<: *build-shared-conf
+      dockerfile: Dockerfile
     <<: *pandaria-shared-conf
     command: --max_allowed_packet=32505856
     ports:
      - "3336:3306"
+    restart: unless-stopped
+
 
   phpmyadmin:
     image: phpmyadmin
@@ -99,7 +94,7 @@ services:
     container_name: pandaria-worldserver
     build:
       context: containers/worldserver
-      <<: *build-shared-conf
+      dockerfile: Dockerfile
     <<: *pandaria-shared-conf
     ports:
       - "3443:3443"
