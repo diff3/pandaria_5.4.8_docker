@@ -2,13 +2,11 @@ version: '3.9'
 
 x-pandaria-shared-conf: &pandaria-shared-conf
   environment:
-      - TZ=Europe/London
-      - CONVERTED_USER_ID=0
-      - CONVERTED_GROUP_ID=0
+    - TZ=Europe/London
   volumes:
-    - "./build:/opt/build:rw,uid=0,gid=0"
-    - "./server:/opt/server:rw,uid=0,gid=0"
-    - "${WOW_PATH}:/opt/wow:rw,uid=0,gid=0"
+    - "./server:/opt/server:rw"
+    - "${WOW_PATH}:/opt/wow:rw"
+    - "./build:/opt/build:rw"
   tty: True
   restart: unless-stopped
 
@@ -60,6 +58,8 @@ services:
 
   sql:
     image: pandaria:mariadb
+    environment:
+      - TZ=Europe/London
     env_file:
       - ./env/mariadb.env
       - ./env/compile.env
@@ -68,12 +68,14 @@ services:
     build:
       context: containers/sql
       dockerfile: Dockerfile
-    <<: *pandaria-shared-conf
+    volumes:
+       - "./build:/opt/build:rw"
+    tty: True
     command: --max_allowed_packet=32505856
+      #  user: "${USER_ID}:${GROUP_ID}"
     ports:
-     - "3336:3306"
+      - "3336:3306"
     restart: unless-stopped
-
 
   phpmyadmin:
     image: phpmyadmin
