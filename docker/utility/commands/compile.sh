@@ -34,11 +34,21 @@ make clean
 
 # Build and install if enabled
 if [ "${MAKE_INSTALL:-1}" -eq 1 ]; then
-   echo "Running make install..."
-  CORES=$(nproc 2>/dev/null || echo 2)
-  JOBS=$((CORES - 2))
+    echo "Running make install..."
 
-   make -j"$JOBS" install
+    # Determine number of cores to use
+    TOTAL_CORES=$(nproc)
+    if [ "${BUILD_CORES:-0}" -eq 0 ]; then
+        CORES="$TOTAL_CORES"
+    elif [ "${BUILD_CORES}" -lt 0 ]; then
+        CORES=$((TOTAL_CORES + BUILD_CORES))
+        [ "$CORES" -lt 1 ] && CORES=1  # Ensure at least 1 core
+    else
+        CORES="${BUILD_CORES}"
+    fi
+
+    echo "Using $CORES cores for build (system has $TOTAL_CORES cores)"
+    make -j"$CORES" install
 fi
 
 echo "=== Compile complete ==="
