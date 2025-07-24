@@ -5,8 +5,8 @@ echo "=== Starting data extraction ==="
 
 # Cleanup temporary files
 echo "--- Cleaning up temporary files ---"
-rm -rf "$WOW_INTERNAL/Buildings"
-rm -f "$WOW_INTERNAL/vmap4extractor"
+rm -rf "$WOW_INTERNAL/Buildings" || true
+rm -f "$WOW_INTERNAL/vmap4extractor" || true
 
 # Creating directories if needed
 BIN_DIR="$INSTALL_PREFIX/bin"
@@ -17,7 +17,7 @@ mkdir -p "$DATA_DIR"
 cd "$BIN_DIR"
 
 if [ "$MAPS" = "ON" ]; then
-    rm -r "$DATA_DIR/dbc"
+    rm -rf "$DATA_DIR/dbc" || true
 
     echo "--- Extracting DBC, Camera, and Maps ---"
     ./mapextractor -i "$WOW_INTERNAL" -o "$DATA_DIR"
@@ -37,7 +37,7 @@ fi
 # Extract and assemble VMAPS
 if [ "$VMAPS" = "ON" ]; then
     echo "--- Extracting VMAPS ---"
-    rm -r "$DATA_DIR/vmaps"
+    rm -rf "$DATA_DIR/vmaps" || true
     mkdir -p "$DATA_DIR/vmaps"
     cp "$BIN_DIR/vmap4extractor" "$WOW_INTERNAL/"
     cd "$WOW_INTERNAL"
@@ -51,7 +51,7 @@ fi
 # Generate MMAPS
 if [ "$MMAPS" = "ON" ]; then
     echo "--- Generating MMAPS ---"
-    rm -r "$DATA_DIR/mmaps"
+    rm -rf "$DATA_DIR/mmaps" || true
     mkdir -p "$DATA_DIR/mmaps"
     cp "$BIN_DIR/mmaps_generator" "$DATA_DIR"
     cd "$DATA_DIR"
@@ -60,9 +60,9 @@ fi
 
 # Cleanup temporary files
 echo "--- Cleaning up temporary files ---"
-rm -rf "$WOW_INTERNAL/Buildings"
-rm -rf "$BIN_DIR/Buildings"
-rm -f "$WOW_INTERNAL/vmap4extractor"
-rm -f "$DATA_DIR/mmaps_generator"
+rm -rf "$WOW_INTERNAL/Buildings" || true
+rm -rf "$BIN_DIR/Buildings" || true
+rm -f "$WOW_INTERNAL/vmap4extractor" || true
+rm -f "$DATA_DIR/mmaps_generator" || true
 
 echo "=== Data extraction complete ==="
