@@ -25,6 +25,7 @@ help:
 	@echo "Available commands:"
 	@echo ""
 	@echo "=== Build & Setup ==="
+	@echo "  make fetch_source        - Clone source code if missing, or pull latest updates if already present"
 	@echo "  make build               - Build the utility container"
 	@echo "  make build-nocache       - Build the utility container without cache"
 	@echo "  make compile             - Compile the server (SkyFire/Pandaria)"
@@ -61,7 +62,8 @@ help:
 	@echo ""
 	@echo "=== Debug & Shell ==="
 	@echo "  make shell               - Start a shell inside the utility container"
-	@echo "  make check               - check if pependencies are met."
+	@echo "  make check               - check if dependencies are met."
+
 
 # --- Build and Compile ---
 build:
@@ -132,7 +134,6 @@ shell:
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/bash
 
 clean:
-	$(DOCKER_COMPOSE) down --remove-orphans
 	docker image prune -f
 
 telnet:
@@ -174,3 +175,13 @@ check:
 		echo "Error: telnet is not installed. Please install it."; exit 1; \
 	fi
 	@echo "All dependencies are present."
+
+# Fetch the source code if not already present
+fetch_source:
+	@if [ ! -d "src/pandaria_5.4.8/.git" ]; then \
+		echo "Cloning Pandaria 5.4.8 source..."; \
+		git clone https://github.com/alexkulya/pandaria_5.4.8 src/pandaria_5.4.8; \
+	else \
+		echo "Updating Pandaria 5.4.8 source..."; \
+		cd src/pandaria_5.4.8 && git pull --rebase; \
+	fi

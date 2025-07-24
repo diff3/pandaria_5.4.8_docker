@@ -16,4 +16,5 @@ src/**
 *.bak
 .DS_Store
 TODO*
+.env
 
