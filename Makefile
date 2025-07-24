@@ -148,7 +148,7 @@ apply_custom_config:
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/apply_custom_config.sh $(FILE)
 
 # --- Combined Install ---
-install: build compile extract_data setup_db configure start
+install: fetch_source build compile extract_data setup_db configure start
 	@echo "Installation complete. All services are running."
 
 apply_sql:

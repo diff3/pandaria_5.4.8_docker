@@ -72,12 +72,13 @@ make install
 ````
 
 This command will:
-	1.	Build all required Docker containers (utility, authserver, worldserver, database if internal).
-	2.	Compile the Pandaria 5.4.8 server.
-	3.	Set up and configure the databases.
-	4.	Generate configuration files for worldserver.conf and authserver.conf.
-	5.	Extract all required data (maps, DBC, VMaps, and MMaps) into /app/data.
-	6.	Start all services automatically.
+  1.  Fetch or update source code.
+	2.	Build all required Docker containers (utility, authserver, worldserver, database if internal).
+	3.	Compile the Pandaria 5.4.8 server.
+	4.	Set up and configure the databases.
+	5.	Generate configuration files for worldserver.conf and authserver.conf.
+	6.	Extract all required data (maps, DBC, VMaps, and MMaps) into /app/data.
+	7.	Start all services automatically.
 
 ### 4. Configure the WoW Client
 
@@ -150,12 +151,13 @@ make install
 ```
 
 This will:
-1. **Build** all necessary containers (utility, authserver, worldserver, optional DB).
-2. **Compile** the Pandaria core.
-3. **Extract** maps, vmaps, and mmaps if needed.
-4. **Set up databases** (initialize, populate, update, finalize).
-5. **Generate default configuration files** (`worldserver.conf`, `authserver.conf`).
-6. **Start all services** (authserver, worldserver, optional DB).
+1. **Clone** all necessary git repos.
+2. **Build** all necessary containers (utility, authserver, worldserver, optional DB).
+3. **Compile** the Pandaria core.
+4. **Extract** maps, vmaps, and mmaps if needed.
+5. **Set up databases** (initialize, populate, update, finalize).
+6. **Generate default configuration files** (`worldserver.conf`, `authserver.conf`).
+7. **Start all services** (authserver, worldserver, optional DB).
 
 After the process completes, you can check logs:
 ```bash
@@ -168,22 +170,28 @@ make logs
 
 If you don’t want to use `make install`, here’s how to do it manually:
 
-### Step 1 – Build the Utility Container
+### Step 1 – Clone the source code
+```bash
+cd src
+git clone https://github.com/alexkulya/pandaria_5.4.8.git
+```
+
+### Step 2 – Build the Utility Container
 ```bash
 docker compose build utility
 ```
 
-### Step 2 – Compile the Pandaria Core
+### Step 3 – Compile the Pandaria Core
 ```bash
 docker compose run --rm utility compile
 ```
 
-### Step 3 – Extract Game Data (DBC, Maps, VMaps, MMaps)
+### Step 4 – Extract Game Data (DBC, Maps, VMaps, MMaps)
 ```bash
 docker compose run --rm utility extract_data
 ```
 
-### Step 4 – Set Up the Database
+### Step 5 – Set Up the Database
 Initialize and populate the MariaDB/MySQL databases:
 ```bash
 docker compose run --rm utility init_db
@@ -192,17 +200,17 @@ docker compose run --rm utility update_db
 docker compose run --rm utility finalize_db
 ```
 
-### Step 5 – Generate Config Files
+### Step 6 – Generate Config Files
 ```bash
 docker compose run --rm utility configure
 ```
 
-### Step 6 – Start the Server
+### Step 7 – Start the Server
 ```bash
 docker compose up -d
 ```
 
-### Step 7 – View Logs
+### Step 8 – View Logs
 ```bash
 docker compose logs -f
 ```
