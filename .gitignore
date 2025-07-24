@@ -1,0 +1,19 @@
+# Ignore everything in app except for custom and sql_fixes
+app/**
+!app/custom/
+!app/sql_fixes/
+
+# Ignore all contents in backup and src
+backup/**
+src/**
+
+# Always keep .keep files everywhere
+!**/.keep
+
+# General ignores
+*.log
+*.tmp
+*.bak
+.DS_Store
+TODO*
+

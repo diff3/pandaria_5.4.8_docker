@@ -1,0 +1,79 @@
+services:
+  utility:
+    image: ${IMAGE_NAME}-utility:${OS_NAME}
+    container_name: ${CONTAINER_NAME}-utility
+    env_file:
+      - ./.env
+    build:
+      context: docker/utility
+      dockerfile: Dockerfile
+    volumes:
+      - "./app:/app:rw"
+      - "./src:/src:rw"
+      - "./backup:/backup:rw"
+      - "${WOW_PATH}:/app/wow:rw"
+    tty: true
+    restart: "no"
+    profiles:
+      - utility
+  
+  authserver:
+    image: ${IMAGE_NAME}-authserver:${OS_NAME}
+    container_name: ${CONTAINER_NAME}-authserver
+    environment:
+      - TZ=${TIMEZONE}
+    build:
+      context: docker/authserver
+      dockerfile: Dockerfile
+    volumes:
+      - "./app:/app:rw"
+    ports:
+      - "${AUTH_PORT}:3724"
+    restart: unless-stopped
+  
+  worldserver:
+    image: ${IMAGE_NAME}-worldserver:${OS_NAME}
+    container_name: ${CONTAINER_NAME}-worldserver
+    environment:
+      - TZ=${TIMEZONE}
+    build:
+      context: docker/worldserver
+      dockerfile: Dockerfile
+    volumes:
+      - "./app:/app:rw"
+    ports:
+      - "${RA_PORT}:3443"
+      - "${SOAP_PORT}:7878"
+      - "${REALM_PORT}:8085"
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: ${CONTAINER_NAME}-phpmyadmin
+    ports:
+      - "${PHPADMIN_PORT}:80"
+    environment:
+      - PMA_HOST=${DB_HOST}
+      - PMA_PORT=${DB_PORT}
+      - PMA_USER=${SERVER_DB_USER}
+      - PMA_PASSWORD=${SERVER_DB_PASSWORD}
+    restart: "no"
+    profiles:
+      - phpadmin
+
+  db:
+    image: mariadb:latest
+    container_name: ${CONTAINER_NAME}-db
+    environment:
+      - TZ=${TIMEZONE}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
+    command: --max_allowed_packet=67108864
+    ports:
+      - "${DB_PORT}:3306"
+    restart: unless-stopped
+    profiles:
+      - db
+
+networks:
+  default:
+    name: ${CONTAINER_NAME}-network
