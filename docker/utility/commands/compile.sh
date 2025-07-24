@@ -17,6 +17,25 @@ mkdir -p "$SOURCE_PREFIX/build"
 
 cd "$SOURCE_PREFIX/build" || exit 1
 
+# Detect CPU generation
+CPU_MODEL=$(grep -m1 "model name" /proc/cpuinfo)
+
+# Default flags
+CXX_FLAGS="-pthread -O2"
+
+# Disable march=native on older CPUs (Ivy Bridge and older)
+if echo "$CPU_MODEL" | grep -Eq "i[357]-[23]"; then
+    echo "Old CPU detected ($CPU_MODEL). Disabling -march=native and lowering optimization..."
+    CXX_FLAGS="-pthread -O1"
+else
+    CXX_FLAGS="$CXX_FLAGS -march=native"
+fi
+
+# Export flags for cmake
+export CMAKE_CXX_FLAGS="$CXX_FLAGS"
+
+echo "Using C++ flags: $CXX_FLAGS"
+
 # Run CMake configuration
 cmake .. \
   -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
