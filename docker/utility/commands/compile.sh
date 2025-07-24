@@ -12,7 +12,7 @@ escape() {
 }
 
 # Ensure runtime directories exist
-mkdir -p "$INSTALL_PREFIX/logs" "$INSTALL_PREFIX/etc" "$INSTALL_PREFIX/bin" "$INSTALL_PREFIX/sql" "$INSTALL_PREFIX/data"
+mkdir -p "$INSTALL_PREFIX/logs" "$INSTALL_PREFIX/etc" "$INSTALL_PREFIX/bin" "$INSTALL_PREFIX/sql" "$INSTALL_PREFIX/data" "$INSTALL_PREFIX/lib"
 mkdir -p "$SOURCE_PREFIX/build"
 
 cd "$SOURCE_PREFIX/build" || exit 1
