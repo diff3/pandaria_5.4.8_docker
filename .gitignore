@@ -1,9 +1,13 @@
 # Ignore everything in app except for custom and sql_fixes
 app/**
-!app/custom/
-!app/sql_fixes/
+!app/custom_conf
+!app/custom_sql
 
-# Ignore all contents in backup and src
+!app/custom_sql/**
+!app/custom_conf/**
+
+
+# Ignore all contents in backup ad src
 backup/**
 src/**
 
