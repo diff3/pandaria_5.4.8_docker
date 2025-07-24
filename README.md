@@ -268,18 +268,40 @@ account set gmlevel test 3 -1
 
 ## 7. Optional Customization
 
-- Place **custom configuration files** in `/app/custom_conf/`  
-  and apply them with:
-  ```bash
-  make apply_custom_config
-  ```
-  Or a single file:
-  ```bash
-  make apply_custom_config FILE=world.conf
-  ```
+You can customize your Pandaria 5.4.8 server with **configuration files** and **SQL scripts**.  
+There are separate directories for different types of customizations, each executed at specific stages.
 
-- Place **SQL fixes or custom scripts** in `/app/custom_sql/fixes` or `/app/custom_sql/custom`.  
-  These are automatically applied during database updates.
+### Custom Configuration Files
+
+Place your `.conf` files inside: /app/custom_conf/
+
+To apply **all** configuration files automatically: make apply_custom_config
+
+To apply a **single file** only: make apply_custom_config FILE=world.conf
+
+
+These files are merged into the server’s main configuration after the default `configure` step.
+
+---
+
+### Custom SQL Scripts
+
+SQL scripts are divided into three directories under `/app/custom_sql/`:
+
+1. **`fixes/`**  
+   - Runs **after the world database update** but **before minor update scripts**.  
+   - Used for bug fixes, missing tables, or replacing broken structures.
+
+2. **`custom/`**  
+   - Runs **after all database updates** (including fixes and official updates).  
+   - Use for adding mounts, changing vendor prices, or tweaking gameplay.
+
+3. **`misc/`**  
+   - Scripts in this directory are **not applied automatically**.  
+   - Apply manually via:
+
+make apply_sql FILE=my_script.sql
+This lets you test experimental SQL or run manual tweaks without affecting automatic updates.
 
 ---
 
