@@ -45,8 +45,9 @@ cmake .. \
   -DWITH_WARNINGS="$WARNINGS" \
   -DTOOLS="$EXTRACTORS" \
   -DCMAKE_CXX_FLAGS="$CMAKE_CXX_FLAGS" \
+  -DCMAKE_DISABLE_PRECOMPILE_HEADERS="$CMAKE_DISABLE_PCH" \
   -DACE_INCLUDE_DIR=/usr/include \
-  -DACE_LIBRARY=/usr/lib/x86_64-linux-gnu/libACE.so \
+  -DACE_LIBRARY=/usr/lib/x86_64-linux-gnu/libACE.so
 
 # Clean previous build
 make clean
@@ -57,11 +58,8 @@ if [ "${MAKE_INSTALL:-1}" -eq 1 ]; then
 
     # Determine number of cores to use
     TOTAL_CORES=$(nproc)
-    if [ "${BUILD_CORES:-0}" -eq 0 ]; then
+    if [ -z "${BUILD_CORES}" ] || [ "${BUILD_CORES}" -eq 0 ]; then
         CORES="$TOTAL_CORES"
-    elif [ "${BUILD_CORES}" -lt 0 ]; then
-        CORES=$((TOTAL_CORES + BUILD_CORES))
-        [ "$CORES" -lt 1 ] && CORES=1  # Ensure at least 1 core
     else
         CORES="${BUILD_CORES}"
     fi
