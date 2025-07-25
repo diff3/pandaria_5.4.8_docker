@@ -1,14 +1,15 @@
 # Ignore everything in app except for custom and sql_fixes
 app/**
+!app/sql
 !app/custom_conf
-!app/custom_sql
 
-!app/custom_sql/**
+!app/sql/**
 !app/custom_conf/**
 
 
 # Ignore all contents in backup ad src
-backup/**
+app/sql/backup/**
+app/sql/install/**
 src/**
 
 # Always keep .keep files everywhere

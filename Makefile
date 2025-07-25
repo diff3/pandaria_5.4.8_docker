@@ -1,5 +1,5 @@
 # Makefile for Pandaria 5.4.8 Utility
-
+MAKEFLAGS += --silent
 # --- Load environment variables ---
 ifneq ("$(wildcard .env)","")
     include .env
@@ -96,8 +96,17 @@ update_db:
 finalize_db:
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh templates auth_update_template.sql
 
+# -- 	$(DOCKER_COMPOSE) run --rm $(UTILITY) setup_db
 setup_db:
-	$(DOCKER_COMPOSE) run --rm $(UTILITY) setup_db
+	@echo "Initializing databases..."
+	$(MAKE) init_db
+	@echo "Populating databases..."
+	$(MAKE) populate_db
+	@echo "Updating databases..."
+	$(MAKE) update_db
+	@echo "Finalizing setup..."
+	$(MAKE) finalize_db
+	@echo "Database setup complete."
 
 normalize_sql:
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) normalize_sql
@@ -156,7 +165,7 @@ install: fetch_source build compile extract_data setup_db configure start
 
 apply_sql:
 # Default directory if not provided
-DIR ?= misc
+DIR ?= 
 FILE ?=
 DB ?=
 
