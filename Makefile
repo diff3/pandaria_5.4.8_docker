@@ -39,7 +39,6 @@ help:
 	@echo "  make populate_db         - Populate databases with base and latest world data"
 	@echo "  make update_db           - Update databases with latest SQL data"
 	@echo "  make finalize_db         - Update auth with user and realm info"
-	@echo "  make normalize_sql       - Normalize database names in base SQL files"
 	@echo "  make backup_db           - Backup all Pandaria databases"
 	@echo "  make restore_db          - Restore all Pandaria databases from backups"
 	@echo "  make apply_sql           - Apply SQL files from custom_sql/misc (all or a specific file via FILE=<name>)"
@@ -81,7 +80,6 @@ configure:
 extract_data:
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) extract_data
 
-# --- Database Operations $(DOCKER_COMPOSE) run --rm $(UTILITY) init_db ---
 init_db:
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh templates init_db_template.sql
 
@@ -91,25 +89,19 @@ populate_db:
 update_db:
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) update_db
 
-# --- bk 	$(DOCKER_COMPOSE) run --rm $(UTILITY) finalize_db ---
-
 finalize_db:
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh templates auth_update_template.sql
 
-# -- 	$(DOCKER_COMPOSE) run --rm $(UTILITY) setup_db
 setup_db:
 	@echo "Initializing databases..."
 	$(MAKE) init_db
 	@echo "Populating databases..."
-	$(MAKE) populate_db
+	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/build_sql_bundles.sh
 	@echo "Updating databases..."
-	$(MAKE) update_db
+	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/install_all_sql.sh
 	@echo "Finalizing setup..."
 	$(MAKE) finalize_db
 	@echo "Database setup complete."
-
-normalize_sql:
-	$(DOCKER_COMPOSE) run --rm $(UTILITY) normalize_sql
 
 backup_db:
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/backup_db.sh
@@ -134,7 +126,6 @@ logs:
 down:
 	$(DOCKER_COMPOSE) down
 
-# $(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/uninstall_db.sh || true
 uninstall:
 	@echo "Removing all containers, volumes, and images..."
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh templates uninstall_db_template.sql
@@ -164,19 +155,17 @@ install: fetch_source build compile extract_data setup_db configure start
 	@echo "Installation complete. All services are running."
 
 apply_sql:
-# Default directory if not provided
-DIR ?= 
-FILE ?=
-DB ?=
+	# Default directory if not provided
+	DIR ?= 
+	FILE ?=
+	DB ?=
 
-apply_sql:
 	@if [ -n "$(FILE)" ]; then \
 		$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh "$(DIR)" "$(FILE)" "$(DB)"; \
 	else \
 		$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh "$(DIR)" "" "$(DB)"; \
 	fi
 	
-
 # --- Dependency Check & Install ---
 check:
 	@echo "Checking required dependencies..."

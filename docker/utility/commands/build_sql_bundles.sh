@@ -1,91 +1,89 @@
 #!/bin/sh
 set -e
 
-echo "=== Building SQL bundles (base, update, patches, fixes, custom) ==="
+# Load environment variables if available
+[ -f "/app/.env" ] && . /app/.env
 
-INSTALL_DIR="/app/sql/install"
-UPDATES_DIR="$SOURCE_PREFIX/sql/updates"
-BASE_DIR="$SOURCE_PREFIX/sql/base"
-FIXES_DIR="/app/sql/fixes"
-CUSTOM_DIR="/app/sql/custom"
+SQL_DIR="/app/sql/install"
+TMP_DIR="$SQL_DIR/tmp"
 
-# Se till att katalogen finns och töm den
-mkdir -p "$INSTALL_DIR"
-rm -f "$INSTALL_DIR"/*.sql
+WORLD_ZIP="$WORLD_DB_ZIP"
+WORLD_URL="$WORLD_DB_URL"
 
-# --- 1. Extrahera base-databaser ---
-echo "Extracting base databases..."
-unzip -o "$BASE_DIR/auth_*.zip" -d "$INSTALL_DIR"
-mv "$INSTALL_DIR/$AUTH_SQL" "$INSTALL_DIR/auth_base.sql"
+AUTH_BUNDLE="$SQL_DIR/auth_base.sql"
+CHAR_BUNDLE="$SQL_DIR/characters_base.sql"
+WORLD_BUNDLE="$SQL_DIR/world_base.sql"
+WORLD_UPDATE="$SQL_DIR/world_update.sql"
 
-unzip -o "$BASE_DIR/characters_*.zip" -d "$INSTALL_DIR"
-mv "$INSTALL_DIR/$CHARACTER_SQL" "$INSTALL_DIR/characters_base.sql"
+AUTH_PATCHES="$SQL_DIR/auth_patches_update.sql"
+CHAR_PATCHES="$SQL_DIR/characters_patches_update.sql"
+WORLD_PATCHES="$SQL_DIR/world_patches_update.sql"
 
-unzip -o "$BASE_DIR/world_*.zip" -d "$INSTALL_DIR"
-mv "$INSTALL_DIR/$WORLD_SQL" "$INSTALL_DIR/world_base.sql"
+# --- Prepare directories ---
+mkdir -p "$SQL_DIR" "$TMP_DIR"
 
-# --- 2. Hämta world-update ---
-if [ ! -f "$WORLD_DB_ZIP" ]; then
-    echo "Downloading latest world database..."
-    wget --progress=bar:force:noscroll "$WORLD_DB_URL" -O "$WORLD_DB_ZIP"
+echo "=== Building bundled SQL files ==="
+
+# --- Extract base SQL from zips ---
+echo "Unzipping base databases..."
+unzip -o "$SOURCE_PREFIX/sql/base/auth_04_03_2023.zip" -d "$TMP_DIR"
+unzip -o "$SOURCE_PREFIX/sql/base/characters_29_12_2024.zip" -d "$TMP_DIR"
+unzip -o "$SOURCE_PREFIX/sql/base/world_04_03_2023.zip" -d "$TMP_DIR"
+
+# Move/rename base SQL to consistent names
+mv -f "$TMP_DIR/$AUTH_SQL" "$AUTH_BUNDLE"
+mv -f "$TMP_DIR/$CHARACTER_SQL" "$CHAR_BUNDLE"
+mv -f "$TMP_DIR/$WORLD_SQL" "$WORLD_BUNDLE"
+
+# --- Download & prepare world update ---
+if [ ! -f "$WORLD_ZIP" ]; then
+    echo "Downloading latest world dump..."
+    wget --progress=bar:force:noscroll "$WORLD_URL" -O "$WORLD_ZIP"
 fi
 
-echo "Extracting world update..."
-unzip -o "$WORLD_DB_ZIP" -d "$INSTALL_DIR"
-mv "$WORLD_SQL_UPDATE" "$INSTALL_DIR/world_update.sql"
+echo "Extracting latest world update..."
+unzip -o "$WORLD_ZIP" -d "$TMP_DIR"
 
-# --- 3. Bygg patch-filer (en per DB) ---
-build_patch_file() {
-    local db_prefix="$1"   # auth, characters, world
-    local output="$INSTALL_DIR/${db_prefix}_patches_update.sql"
+# Move world update SQL from tmp to install dir
+WORLD_UPDATE_SRC="$TMP_DIR/$(basename "$WORLD_SQL_UPDATE")"
+if [ -f "$WORLD_UPDATE_SRC" ]; then
+    mv -f "$WORLD_UPDATE_SRC" "$WORLD_UPDATE"
+else
+    echo "Error: Expected world update file $WORLD_UPDATE_SRC not found."
+    exit 1
+fi
 
-    echo "-- Combined patches for $db_prefix" > "$output"
+# --- Merge incremental patches into single files ---
+merge_patches() {
+    local src_dir="$1"
+    local target="$2"
 
-    if [ -d "$UPDATES_DIR/$db_prefix" ]; then
-        for patch in $(ls "$UPDATES_DIR/$db_prefix"/*.sql 2>/dev/null | sort); do
-            echo "Adding patch: $(basename "$patch")"
-            cat "$patch" >> "$output"
-            echo "" >> "$output"
-        done
-    else
-        echo "-- No patches for $db_prefix" >> "$output"
+    if [ ! -d "$src_dir" ]; then
+        echo "No patches in $src_dir, skipping."
+        return
     fi
+
+    echo "Merging patches from $src_dir into $target..."
+    cat $(find "$src_dir" -type f -name '*.sql' | sort) > "$target"
 }
 
-build_patch_file "auth"
-build_patch_file "characters"
-build_patch_file "world"
+merge_patches "$SOURCE_PREFIX/sql/updates/auth" "$AUTH_PATCHES"
+merge_patches "$SOURCE_PREFIX/sql/updates/characters" "$CHAR_PATCHES"
+merge_patches "$SOURCE_PREFIX/sql/updates/world" "$WORLD_PATCHES"
 
-# --- 4. Bundla fixes och custom (en per DB) ---
-bundle_extra_sql() {
-    local src_dir="$1"   # katalog (fixes eller custom)
-    local type="$2"      # "fixes" eller "custom"
+# --- Normalize DB names in all SQL files ---
+echo "Normalizing database names..."
+for file in "$SQL_DIR"/*.sql; do
+    [ -f "$file" ] || continue
+    echo "Patching $file..."
+    sed -i -E "s/(CREATE DATABASE.*|USE) *\`auth\`/\1 \`$AUTH_DB\`/Ig" "$file"
+    sed -i -E "s/(CREATE DATABASE.*|USE) *\`characters\`/\1 \`$CHARACTER_DB\`/Ig" "$file"
+    sed -i -E "s/(CREATE DATABASE.*|USE) *\`world\`/\1 \`$WORLD_DB\`/Ig" "$file"
+done
 
-    for db_prefix in auth characters world; do
-        local output="$INSTALL_DIR/${db_prefix}_${type}.sql"
-        local files=$(ls "$src_dir/${db_prefix}_*.sql" 2>/dev/null | sort || true)
+# --- Cleanup ---
+rm -rf "$TMP_DIR"
 
-        if [ -z "$files" ]; then
-            echo "No $type SQL files for $db_prefix, skipping."
-            rm -f "$output" 2>/dev/null || true
-            continue
-        fi
-
-        echo "Bundling $type SQL for $db_prefix into $(basename "$output")..."
-        echo "-- Combined $type for $db_prefix" > "$output"
-        for f in $files; do
-            cat "$f" >> "$output"
-            echo "" >> "$output"
-        done
-    done
-}
-
-bundle_extra_sql "$FIXES_DIR" "fixes"
-bundle_extra_sql "$CUSTOM_DIR" "custom"
-
-# --- 5. Normalisera alla SQL-filer (inklusive fixes/custom) ---
-echo "Normalizing SQL files..."
-/bin/commands/normalize_sql.sh
-
-echo "=== SQL bundle build complete. Generated files: ==="
-ls -1 "$INSTALL_DIR"/*.sql
+echo "=== All bundled SQL files are ready in $SQL_DIR ==="
+echo "Generated:"
+ls -1 "$SQL_DIR"/*.sql || echo "(No files generated)"
