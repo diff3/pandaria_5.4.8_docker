@@ -4,7 +4,7 @@ set -e
 # Load environment variables if available
 [ -f "/app/.env" ] && . /app/.env
 
-SQL_DIR="/app/sql"
+SQL_DIR="/app/sql/install"
 
 # List of SQL files to normalize (space-separated, no arrays)
 FILES="$SQL_DIR/2024_08_01_world.sql \

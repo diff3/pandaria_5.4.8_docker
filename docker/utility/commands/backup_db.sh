@@ -4,7 +4,7 @@ set -e
 echo "=== Backing up Pandaria databases ==="
 
 DATE=$(date +"%Y%m%d_%H%M%S")
-BACKUP_DIR="/backup/$DATE"
+BACKUP_DIR="/app/sql/backup/$DATE"
 mkdir -p "$BACKUP_DIR"
 
 for DB in "$AUTH_DB" "$CHARACTER_DB" "$WORLD_DB"; do

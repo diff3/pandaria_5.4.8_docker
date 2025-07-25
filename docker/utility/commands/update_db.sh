@@ -12,7 +12,7 @@ if [ ! -f "$WORLD_DB_ZIP" ]; then
 fi
 
 echo "Extracting world database..."
-unzip -o "$WORLD_DB_ZIP" -d /app/sql
+unzip -o "$WORLD_DB_ZIP" -d /app/sql/install
 
 # Normalize world SQL (replaces DB names)
 /bin/commands/normalize_sql.sh

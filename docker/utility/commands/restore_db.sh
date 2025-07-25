@@ -3,7 +3,7 @@ set -e
 
 echo "=== Restoring Pandaria databases ==="
 
-BACKUP_DIR="/backup"
+BACKUP_DIR="/app/sql/backup"
 DB_HOST="${DB_HOST:?DB_HOST not set}"
 DB_PORT="${DB_PORT:?DB_PORT not set}"
 ROOT_USER="${MYSQL_USERNAME:?MYSQL_USERNAME not set}"

@@ -7,7 +7,7 @@ mysql -h "$DB_HOST" -P "$DB_PORT" -u "$MYSQL_USERNAME" -p"$MYSQL_PASSWORD" \
   -e "SET GLOBAL max_allowed_packet=536870912;"
 
 # Temporary directory for extracted SQL
-TMP_DIR="/app/sql"
+TMP_DIR="/app/sql/install"
 mkdir -p "$TMP_DIR"
 
 echo "Unzipping base database files..."
@@ -16,9 +16,9 @@ unzip -o "$SOURCE_PREFIX/sql/base/characters_29_12_2024.zip" -d "$TMP_DIR"
 unzip -o "$SOURCE_PREFIX/sql/base/world_04_03_2023.zip" -d "$TMP_DIR"
 
 # Paths
-AUTH_SQL_PATH="/app/sql/$AUTH_SQL"
-CHAR_SQL_PATH="/app/sql/$CHARACTER_SQL"
-WORLD_SQL_PATH="/app/sql/$WORLD_SQL"
+AUTH_SQL_PATH="/app/sql/install/$AUTH_SQL"
+CHAR_SQL_PATH="/app/sql/install/$CHARACTER_SQL"
+WORLD_SQL_PATH="/app/sql/install/$WORLD_SQL"
 
 echo "Normalizing database names (with backtick support)..."
 

@@ -81,9 +81,9 @@ configure:
 extract_data:
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) extract_data
 
-# --- Database Operations ---
+# --- Database Operations $(DOCKER_COMPOSE) run --rm $(UTILITY) init_db ---
 init_db:
-	$(DOCKER_COMPOSE) run --rm $(UTILITY) init_db
+	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh templates init_db_template.sql
 
 populate_db:
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) populate_db
@@ -91,8 +91,10 @@ populate_db:
 update_db:
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) update_db
 
+# --- bk 	$(DOCKER_COMPOSE) run --rm $(UTILITY) finalize_db ---
+
 finalize_db:
-	$(DOCKER_COMPOSE) run --rm $(UTILITY) finalize_db
+	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh templates auth_update_template.sql
 
 setup_db:
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) setup_db
@@ -123,9 +125,10 @@ logs:
 down:
 	$(DOCKER_COMPOSE) down
 
+# $(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/uninstall_db.sh || true
 uninstall:
 	@echo "Removing all containers, volumes, and images..."
-	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/uninstall_db.sh || true
+	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh templates uninstall_db_template.sql
 	$(DOCKER_COMPOSE) down -v --rmi all --remove-orphans
 	docker system prune -af
 
@@ -152,11 +155,18 @@ install: fetch_source build compile extract_data setup_db configure start
 	@echo "Installation complete. All services are running."
 
 apply_sql:
+# Default directory if not provided
+DIR ?= misc
+FILE ?=
+DB ?=
+
+apply_sql:
 	@if [ -n "$(FILE)" ]; then \
-		$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/run_manual_sql.sh "$(FILE)"; \
+		$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh "$(DIR)" "$(FILE)" "$(DB)"; \
 	else \
-		$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/run_manual_sql.sh; \
+		$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh "$(DIR)" "" "$(DB)"; \
 	fi
+	
 
 # --- Dependency Check & Install ---
 check:
