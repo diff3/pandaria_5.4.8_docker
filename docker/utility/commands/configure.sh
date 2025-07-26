@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-echo "Configuring SkyFire authserver and worldserver (overwrite mode)..."
+echo "=== Configuring ${PROJECT_NAME} authserver and worldserver (overwrite mode) ==="
 
 # Ensure etc directory exists
 mkdir -p "$INSTALL_PREFIX/etc"
@@ -34,4 +34,4 @@ sed -i -e "s|^SOAP.IP =.*|SOAP.IP = \"$SOAP_IP\"|" "$INSTALL_PREFIX/etc/worldser
 
 sed -i -e "s|^Console.Enable =.*|Console.Enable = \"$CONSOLE\"|" "$INSTALL_PREFIX/etc/worldserver.conf"
 
-echo "Configuration updated successfully."
+echo "=== Configuration updated successfully ==="

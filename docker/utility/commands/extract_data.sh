@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-echo "=== Starting data extraction ==="
+echo "=== Starting data extraction for $PROJECT_NAME ==="
 
 # Cleanup temporary files
 echo "--- Cleaning up temporary files ---"

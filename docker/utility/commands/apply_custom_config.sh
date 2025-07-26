@@ -1,9 +1,17 @@
 #!/bin/sh
 set -e
 
- # Där worldserver.conf och authserver.conf ligger
+# Apply custom configuration files to authserver.conf and worldserver.conf
+# Uses CUSTOM_DIR (for input) and ETC_DIR_PATH (for target configs) from .env
 
-# Om en specifik fil anges, kör bara den
+echo "=== Applying custom configs to project ${PROJECT_NAME} ==="
+
+if [ -z "$CUSTOM_DIR" ] || [ -z "$ETC_DIR_PATH" ]; then
+    echo "Error: CUSTOM_DIR or ETC_DIR_PATH is not set. Check your .env file."
+    exit 1
+fi
+
+# If a specific config file is provided as argument, only process that file
 if [ -n "$1" ]; then
     FILES="$CUSTOM_DIR/$1"
 else
@@ -14,26 +22,23 @@ for FILE in $FILES; do
     [ -f "$FILE" ] || continue
     echo "Applying custom config from: $FILE"
 
-    # Läs varje rad och uppdatera motsvarande setting i worldserver.conf eller authserver.conf
-    while IFS= read -r line; do
-        # Hoppa över tomma rader eller kommentarer
-        [ -z "$line" ] && continue
-        echo "$line" | grep -qE '^\s*#' && continue
+    while IFS= read -r LINE; do
+        # Skip empty lines and comments
+        [ -z "$LINE" ] && continue
+        echo "$LINE" | grep -qE '^\s*#' && continue
 
-        KEY=$(echo "$line" | cut -d'=' -f1 | xargs)
-        VALUE=$(echo "$line" | cut -d'=' -f2- | xargs)
+        KEY=$(echo "$LINE" | cut -d'=' -f1 | xargs)
+        VALUE=$(echo "$LINE" | cut -d'=' -f2- | xargs)
 
-        # Hitta vilken fil som ska uppdateras (authserver eller worldserver)
-        if grep -q "^$KEY" "$ETC_DIR_PATH/authserver.conf" 2>/dev/null; then
-            sed -i "s|^$KEY.*|$KEY = $VALUE|" "$ETC_DIR_PATH/authserver.conf"
-            echo "  Updated authserver.conf: $KEY = $VALUE"
-        elif grep -q "^$KEY" "$ETC_DIR_PATH/worldserver.conf" 2>/dev/null; then
-            sed -i "s|^$KEY.*|$KEY = $VALUE|" "$ETC_DIR_PATH/worldserver.conf"
-            echo "  Updated worldserver.conf: $KEY = $VALUE"
-        else
-            echo "  Warning: $KEY not found in any config file"
-        fi
+        # Update value in target config files (authserver.conf & worldserver.conf)
+        for TARGET in "$ETC_DIR_PATH/authserver.conf" "$ETC_DIR_PATH/worldserver.conf"; do
+            if grep -q "^$KEY" "$TARGET"; then
+                sed -i "s|^$KEY.*|$KEY = $VALUE|" "$TARGET"
+            else
+                echo "$KEY = $VALUE" >> "$TARGET"
+            fi
+        done
     done < "$FILE"
 done
 
-echo "Custom config applied."
+echo "=== Custom configs applied successfully ==="

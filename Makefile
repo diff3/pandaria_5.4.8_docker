@@ -1,19 +1,20 @@
-# Makefile for Pandaria 5.4.8 Utility
+# Makefile for $(PROJECT_NAME) 5.4.8 Utility
 MAKEFLAGS += --silent
+
 # --- Load environment variables ---
 ifneq ("$(wildcard .env)","")
     include .env
-    export $(shell sed -n 's/^\([^#]\+\)=.*/\1/p' .env)
+    export $(shell sed -n 's/^\([^#]\+\)=.*/\$(EXTRACTORS)/p' .env)
 endif
 
 DOCKER_COMPOSE := docker compose
 UTILITY := utility
 
-# Telnet settings (fallbacks if missing)
+# Telnet defaults (can override in .env)
 TELNET_HOST ?= $(REALM_ADDRESS)
 TELNET_PORT ?= $(RA_PORT)
 
-# Automatically include DB container unless using an external DB
+# DB container profile (only runs if EXTERNAL_DB=false)
 DB_PROFILES :=
 ifeq ($(EXTERNAL_DB),false)
     DB_PROFILES := --profile db
@@ -25,50 +26,46 @@ help:
 	@echo "Available commands:"
 	@echo ""
 	@echo "=== Build & Setup ==="
-	@echo "  make fetch_source        - Clone source code if missing, or pull latest updates if already present"
+	@echo "  make fetch_source        - Clone or update the $(PROJECT_NAME) source code"
 	@echo "  make build               - Build the utility container"
 	@echo "  make build-nocache       - Build the utility container without cache"
-	@echo "  make compile             - Compile the server (SkyFire/Pandaria)"
-	@echo "  make configure           - Generate new authserver/worldserver configs"
-	@echo "  make extract_data        - Extract maps, vmaps, and mmaps from WoW client"
-	@echo "  make install             - Full installation (compile, extract, setup DB, start servers)"
+	@echo "  make compile             - Compile the server (SkyFire/$(PROJECT_NAME))"
+	@echo "  make configure           - Generate fresh authserver/worldserver configs"
+	@echo "  make extract_data        - Extract maps, vmaps, and mmaps from client"
+	@echo "  make install             - Full installation (build, extract, DB, start servers)"
 	@echo ""
 	@echo "=== Database Management ==="
-	@echo "  make setup_db            - Initialize, populate, update, and finalize all databases"
-	@echo "  make bundle_db           - Build combined SQL bundles (base, patches, fixes, updates, and custom) into /app/sql/install"
-	@echo "  make init_db             - Initialize MySQL/MariaDB databases (drop & recreate)"
-	@echo "  make populate_db         - Populate databases with base and latest world data"
-	@echo "  make update_db           - Update databases with latest SQL data"
-	@echo "  make fix_sql             - Combine and execute all SQL fixes (from /app/sql/fixes) per database"
-	@echo "  make add_custom_sql      - Combine and execute all custom SQL scripts (from /app/sql/custom) per database"
-	@echo "  make populate_db         - Populate databases with base and latest world data"
-	@echo "  make finalize_db         - Update auth with user and realm info"
-	@echo "  make backup_db           - Backup all Pandaria databases"
-	@echo "  make restore_db          - Restore all Pandaria databases from backups"
-	@echo "  make apply_sql           - Apply SQL files from custom_sql/misc (all or a specific file via FILE=<name>)"
+	@echo "  make setup_db            - Initialize, bundle, install, and finalize all databases"
+	@echo "  make bundle_db           - Build SQL bundles (base, patches, fixes, custom) into $(SQL_INSTALL_DIR)"
+	@echo "  make init_db             - Drop and recreate MySQL/MariaDB databases"
+	@echo "  make populate_db         - Install base SQL files from $(SQL_INSTALL_DIR)"
+	@echo "  make update_db           - Apply patch SQL bundles from $(SQL_INSTALL_DIR)"
+	@echo "  make fix_db              - Apply SQL fixes (bundled per DB) from $(SQL_INSTALL_DIR)"
+	@echo "  make add_custom_db       - Apply custom SQL (bundled per DB) from $(SQL_INSTALL_DIR)"
+	@echo "  make finalize_db         - Update auth DB with accounts and realm info"
+	@echo "  make backup_db           - Backup all $(PROJECT_NAME) databases"
+	@echo "  make restore_db          - Restore all $(PROJECT_NAME) databases"
+	@echo "  make apply_sql           - Run SQL manually (DIR=<dir>, FILE=<file>, DB=<db>)"
 	@echo ""
 	@echo "=== Server Operations ==="
-	@echo "  make start               - Start all containers (includes DB unless EXTERNAL_DB=true)"
+	@echo "  make start               - Start all containers (DB included unless EXTERNAL_DB=$(EXTERNAL_DB))"
 	@echo "  make stop                - Stop all containers"
 	@echo "  make restart             - Restart all containers"
-	@echo "  make logs                - Follow logs for all containers"
-	@echo "  make telnet              - Connect to RA port via telnet"
+	@echo "  make logs                - Follow container logs"
+	@echo "  make telnet              - Connect to the RA console via telnet"
 	@echo ""
-	@echo "=== Client & Config Management ==="
-	@echo "  make configure_client     - Configure WoW client (realmlist.wtf + Config.wtf)"
-	@echo "  make apply_custom_config  - Apply custom config(s) from /app/custom (use FILE=<file> to run only one)"
+	@echo "=== Config & Client ==="
+	@echo "  make configure_client    - Update client realmlist and Config.wtf"
+	@echo "  make apply_custom_config - Apply .conf overrides from $(CUSTOM_DIR)"
 	@echo ""
-	@echo "=== Maintenance & Cleanup ==="
-	@echo "  make down                - Stop and remove all containers (preserve volumes)"
-	@echo "  make uninstall           - Remove containers, volumes, DB data, and images"
-	@echo "  make clean               - Remove dangling containers and images"
-	@echo ""
-	@echo "=== Debug & Shell ==="
-	@echo "  make shell               - Start a shell inside the utility container"
-	@echo "  make check               - check if dependencies are met."
+	@echo "=== Cleanup & Debug ==="
+	@echo "  make down                - Stop and remove all containers (volumes kept)"
+	@echo "  make uninstall           - Remove containers, volumes, DB, and images"
+	@echo "  make clean               - Remove dangling Docker images"
+	@echo "  make shell               - Open a shell in the utility container"
+	@echo "  make check               - Verify required dependencies"
 
-
-# --- Build and Compile ---
+# --- Build & Compile ---
 build:
 	$(DOCKER_COMPOSE) build $(UTILITY)
 
@@ -84,62 +81,57 @@ configure:
 extract_data:
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) extract_data
 
+# --- Database Operations ---
 init_db:
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh templates init_db_template.sql
 
 populate_db:
-	@echo "Populating databases with base SQL (auth, characters, world)..."
-	@if ls app/sql/install/*_base.sql >/dev/null 2>&1; then \
-		for f in app/sql/install/*_base.sql; do \
+	@echo "Installing base SQL files..."
+	@if ls $(SQL_INSTALL_DIR)/*_base.sql >/dev/null 2>&$(EXTRACTORS); then \
+		for f in $(SQL_INSTALL_DIR)/*_base.sql; do \
 			echo "Applying $$f..."; \
-			$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh install "$$(basename $$f)" || { \
+			$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh install "$$(basename $$f)" || \
 				echo "Warning: Failed to apply $$f (continuing)"; \
-			}; \
 		done; \
 	else \
-		echo "Warning: No base SQL files found in /app/sql/install. Did you run 'make bundle_db'?"; \
+		echo "Warning: No base SQL found. Run 'make bundle_db' first."; \
 	fi
 
 update_db:
-	@echo "Updating databases..."
-	@if ls app/sql/install/*_patches_update.sql >/dev/null 2>&1; then \
-		for f in app/sql/install/*_patches_update.sql; do \
-			[ -f "$$f" ] || continue; \
+	@echo "Applying SQL patch bundles..."
+	@if ls $(SQL_INSTALL_DIR)/*_patches_update.sql >/dev/null 2>&$(EXTRACTORS); then \
+		for f in $(SQL_INSTALL_DIR)/*_patches_update.sql; do \
 			echo "Applying $$f..."; \
-			$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh install "$$(basename $$f)" || { \
+			$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh install "$$(basename $$f)" || \
 				echo "Warning: Failed to apply $$f (continuing)"; \
-			}; \
 		done; \
 	else \
-		echo "Warning: No update SQL files found in /app/sql/install. Did you run 'make bundle_db'?"; \
+		echo "Warning: No patch bundles found. Run 'make bundle_db' first."; \
 	fi
 
 fix_db:
-	@echo "Update database with fixes"
-	@if ls app/sql/install/*_fixes.sql >/dev/null 2>&1; then \
-		for f in app/sql/install/*_fixes.sql; do \
+	@echo "Applying SQL fixes..."
+	@if ls $(SQL_INSTALL_DIR)/*_fixes.sql >/dev/null 2>&$(EXTRACTORS); then \
+		for f in $(SQL_INSTALL_DIR)/*_fixes.sql; do \
 			echo "Applying $$f..."; \
-			$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh install "$$(basename $$f)" || { \
+			$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh install "$$(basename $$f)" || \
 				echo "Warning: Failed to apply $$f (continuing)"; \
-			}; \
 		done; \
 	else \
-		echo "Warning: No fix SQL files found in /app/sql/install. Did you run 'make bundle_db'?"; \
+		echo "Warning: No fix bundles found. Run 'make bundle_db' first."; \
 	fi
 
 add_custom_db:
-	@echo "Add custom sql to database"
-	@if ls app/sql/install/*_custom.sql >/dev/null 2>&1; then \
-		for f in app/sql/install/*_custom.sql; do \
+	@echo "Applying custom SQL..."
+	@if ls $(SQL_INSTALL_DIR)/*_custom.sql >/dev/null 2>&$(EXTRACTORS); then \
+		for f in $(SQL_INSTALL_DIR)/*_custom.sql; do \
 			echo "Applying $$f..."; \
-			$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh install "$$(basename $$f)" || { \
+			$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh install "$$(basename $$f)" || \
 				echo "Warning: Failed to apply $$f (continuing)"; \
-			}; \
 		done; \
 	else \
-		echo "Warning: No custom SQL files found in /app/sql/install. Did you run 'make bundle_db'?"; \
+		echo "Warning: No custom bundles found. Run 'make bundle_db' first."; \
 	fi
-
 
 finalize_db:
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh templates auth_update_template.sql
@@ -147,11 +139,11 @@ finalize_db:
 setup_db:
 	@echo "Initializing databases..."
 	$(MAKE) init_db
-	@echo "Populating databases..."
+	@echo "Bundling SQL files..."
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/build_sql_bundles.sh
-	@echo "Updating databases..."
+	@echo "Installing all SQL files..."
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/install_all_sql.sh
-	@echo "Finalizing setup..."
+	@echo "Finalizing auth DB..."
 	$(MAKE) finalize_db
 	@echo "Database setup complete."
 
@@ -161,9 +153,26 @@ backup_db:
 restore_db:
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/restore_db.sh
 
-# --- Server Operations ---
+bundle_db:
+	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/build_sql_bundles.sh
+
+
+DIR ?= misc
+FILE ?=
+DB ?=
+
+apply_sql:
+
+
+	@if [ -n "$(FILE)" ]; then \
+		$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh "$(DIR)" "$(FILE)" "$(DB)"; \
+	else \
+		$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh "$(DIR)" "" "$(DB)"; \
+	fi
+
+# --- Server ---
 start:
-	@echo "Starting services... (DB container: $$(if [ "$(EXTERNAL_DB)" = "true" ]; then echo "disabled (external DB)"; else echo "enabled"; fi))"
+	@echo "Starting services (DB: $$(if [ "$(EXTERNAL_DB)" = "$(EXTERNAL_DB)" ]; then echo "external"; else echo "internal"; fi))"
 	$(DOCKER_COMPOSE) up -d $(DB_PROFILES)
 
 stop:
@@ -184,7 +193,7 @@ uninstall:
 	$(DOCKER_COMPOSE) down -v --rmi all --remove-orphans
 	docker system prune -af
 
-# --- Misc ---
+# --- Utilities ---
 shell:
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/bash
 
@@ -198,53 +207,34 @@ telnet:
 configure_client:
 	@sh misc/configure_client.sh '$(WOW_PATH)' '$(WOW_LOCALE)' '$(REALM_ADDRESS)'
 
-# --- Apply custom configs (for worldserver/authserver) ---
 apply_custom_config:
-	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/apply_custom_config.sh $(FILE)
+	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands$(INSTALL_PREFIX)ly_custom_config.sh $(FILE)
 
-# --- Combined Install ---
 install: fetch_source build compile extract_data setup_db configure start
 	@echo "Installation complete. All services are running."
 
-bundle_db:
-	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/build_sql_bundles.sh
-
-apply_sql:
-	# Default directory if not provided
-	DIR ?= 
-	FILE ?=
-	DB ?=
-
-	@if [ -n "$(FILE)" ]; then \
-		$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh "$(DIR)" "$(FILE)" "$(DB)"; \
-	else \
-		$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh "$(DIR)" "" "$(DB)"; \
-	fi
-	
-# --- Dependency Check & Install ---
+# --- Dependency Check ---
 check:
 	@echo "Checking required dependencies..."
-	@if ! command -v docker >/dev/null 2>&1; then \
-		echo "Error: docker is not installed. Please install it."; exit 1; \
+	@if ! command -v docker >/dev/null 2>&$(EXTRACTORS); then \
+		echo "Error: docker is not installed."; exit $(EXTRACTORS); \
 	fi
-	@if ! docker compose version >/dev/null 2>&1; then \
-		echo "Error: docker compose is not installed or configured."; exit 1; \
+	@if ! docker compose version >/dev/null 2>&$(EXTRACTORS); then \
+		echo "Error: docker compose is missing."; exit $(EXTRACTORS); \
 	fi
-	@if ! command -v git >/dev/null 2>&1; then \
-		echo "Error: git is not installed. Please install it."; exit 1; \
+	@if ! command -v git >/dev/null 2>&$(EXTRACTORS); then \
+		echo "Error: git is not installed."; exit $(EXTRACTORS); \
 	fi
-
-	@if ! command -v telnet >/dev/null 2>&1; then \
-		echo "Error: telnet is not installed. Please install it."; exit 1; \
+	@if ! command -v telnet >/dev/null 2>&$(EXTRACTORS); then \
+		echo "Error: telnet is not installed."; exit $(EXTRACTORS); \
 	fi
 	@echo "All dependencies are present."
 
-# Fetch the source code if not already present
 fetch_source:
-	@if [ ! -d "src/pandaria_5.4.8/.git" ]; then \
-		echo "Cloning Pandaria 5.4.8 source..."; \
-		git clone https://github.com/alexkulya/pandaria_5.4.8 src/pandaria_5.4.8; \
+	@if [ ! -d src/pandaria_5.4.8 ]; then \
+		echo "Cloning $(PROJECT_NAME) source..."; \
+		git clone $(REPO_URL) src; \
 	else \
-		echo "Updating Pandaria 5.4.8 source..."; \
+		echo "Updating $(PROJECT_NAME) source..."; \
 		cd src/pandaria_5.4.8 && git pull --rebase; \
 	fi

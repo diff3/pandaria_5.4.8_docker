@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-echo "=== Restoring Pandaria databases ==="
+echo "=== Restoring ${PROJECT_NAME} databases ==="
 
 BACKUP_DIR="/app/sql/backup"
 DB_HOST="${DB_HOST:?DB_HOST not set}"

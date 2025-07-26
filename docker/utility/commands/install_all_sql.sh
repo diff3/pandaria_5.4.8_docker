@@ -1,8 +1,9 @@
 #!/bin/sh
 set -e
 
-SQL_DIR="/app/sql/install"
+# Expect PROJECT_NAME and SQL_INSTALL_DIR from container environment
 
+# All SQL files to be processed (can be overridden by env var if needed)
 FILES="
 auth_base.sql
 characters_base.sql
@@ -19,13 +20,13 @@ characters_custom.sql
 world_custom.sql
 "
 
-echo "=== Installing all SQL files in order ==="
+echo "=== Installing all SQL files in order for $PROJECT_NAME ==="
 
 for FILE in $FILES; do
-    FULL_PATH="$SQL_DIR/$FILE"
+    FULL_PATH="$SQL_INSTALL_DIR/$FILE"
 
     if [ ! -f "$FULL_PATH" ]; then
-        echo "Warning: $FILE not found, skipping."
+        echo "Warning: $FILE not found in $SQL_INSTALL_DIR, skipping."
         continue
     fi
 
