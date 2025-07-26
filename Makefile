@@ -35,9 +35,13 @@ help:
 	@echo ""
 	@echo "=== Database Management ==="
 	@echo "  make setup_db            - Initialize, populate, update, and finalize all databases"
+	@echo "  make bundle_db           - Build combined SQL bundles (base, patches, fixes, updates, and custom) into /app/sql/install"
 	@echo "  make init_db             - Initialize MySQL/MariaDB databases (drop & recreate)"
 	@echo "  make populate_db         - Populate databases with base and latest world data"
 	@echo "  make update_db           - Update databases with latest SQL data"
+	@echo "  make fix_sql             - Combine and execute all SQL fixes (from /app/sql/fixes) per database"
+	@echo "  make add_custom_sql      - Combine and execute all custom SQL scripts (from /app/sql/custom) per database"
+	@echo "  make populate_db         - Populate databases with base and latest world data"
 	@echo "  make finalize_db         - Update auth with user and realm info"
 	@echo "  make backup_db           - Backup all Pandaria databases"
 	@echo "  make restore_db          - Restore all Pandaria databases from backups"
@@ -84,10 +88,58 @@ init_db:
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh templates init_db_template.sql
 
 populate_db:
-	$(DOCKER_COMPOSE) run --rm $(UTILITY) populate_db
+	@echo "Populating databases with base SQL (auth, characters, world)..."
+	@if ls app/sql/install/*_base.sql >/dev/null 2>&1; then \
+		for f in app/sql/install/*_base.sql; do \
+			echo "Applying $$f..."; \
+			$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh install "$$(basename $$f)" || { \
+				echo "Warning: Failed to apply $$f (continuing)"; \
+			}; \
+		done; \
+	else \
+		echo "Warning: No base SQL files found in /app/sql/install. Did you run 'make bundle_db'?"; \
+	fi
 
 update_db:
-	$(DOCKER_COMPOSE) run --rm $(UTILITY) update_db
+	@echo "Updating databases..."
+	@if ls app/sql/install/*_patches_update.sql >/dev/null 2>&1; then \
+		for f in app/sql/install/*_patches_update.sql; do \
+			[ -f "$$f" ] || continue; \
+			echo "Applying $$f..."; \
+			$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh install "$$(basename $$f)" || { \
+				echo "Warning: Failed to apply $$f (continuing)"; \
+			}; \
+		done; \
+	else \
+		echo "Warning: No update SQL files found in /app/sql/install. Did you run 'make bundle_db'?"; \
+	fi
+
+fix_db:
+	@echo "Update database with fixes"
+	@if ls app/sql/install/*_fixes.sql >/dev/null 2>&1; then \
+		for f in app/sql/install/*_fixes.sql; do \
+			echo "Applying $$f..."; \
+			$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh install "$$(basename $$f)" || { \
+				echo "Warning: Failed to apply $$f (continuing)"; \
+			}; \
+		done; \
+	else \
+		echo "Warning: No fix SQL files found in /app/sql/install. Did you run 'make bundle_db'?"; \
+	fi
+
+add_custom_db:
+	@echo "Add custom sql to database"
+	@if ls app/sql/install/*_custom.sql >/dev/null 2>&1; then \
+		for f in app/sql/install/*_custom.sql; do \
+			echo "Applying $$f..."; \
+			$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh install "$$(basename $$f)" || { \
+				echo "Warning: Failed to apply $$f (continuing)"; \
+			}; \
+		done; \
+	else \
+		echo "Warning: No custom SQL files found in /app/sql/install. Did you run 'make bundle_db'?"; \
+	fi
+
 
 finalize_db:
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh templates auth_update_template.sql
@@ -153,6 +205,9 @@ apply_custom_config:
 # --- Combined Install ---
 install: fetch_source build compile extract_data setup_db configure start
 	@echo "Installation complete. All services are running."
+
+bundle_db:
+	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/build_sql_bundles.sh
 
 apply_sql:
 	# Default directory if not provided

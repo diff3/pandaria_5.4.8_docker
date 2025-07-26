@@ -1,7 +1,6 @@
 #!/bin/sh
 set -e
 
-
  # Där worldserver.conf och authserver.conf ligger
 
 # Om en specifik fil anges, kör bara den
