@@ -162,18 +162,26 @@ FILE ?=
 DB ?=
 
 apply_sql:
-
-
 	@if [ -n "$(FILE)" ]; then \
 		$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh "$(DIR)" "$(FILE)" "$(DB)"; \
 	else \
 		$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh "$(DIR)" "" "$(DB)"; \
 	fi
+	
+	
+ifeq ($(EXTERNAL_DB),true)
+  DB_PROFILES=
+  DB_SERVICE=
+  DB_MODE=external
+else
+  DB_PROFILES=--profile db
+  DB_SERVICE=db
+  DB_MODE=internal
+endif
 
-# --- Server ---
 start:
-	@echo "Starting services (DB: $$(if [ "$(EXTERNAL_DB)" = "$(EXTERNAL_DB)" ]; then echo "external"; else echo "internal"; fi))"
-	$(DOCKER_COMPOSE) up -d $(DB_PROFILES)
+	@echo "Starting services (DB: $(DB_MODE))"
+	$(DOCKER_COMPOSE) $(DB_PROFILES) up $(DB_SERVICE) authserver worldserver
 
 stop:
 	$(DOCKER_COMPOSE) stop
