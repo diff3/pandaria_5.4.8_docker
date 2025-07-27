@@ -10,7 +10,7 @@ services:
     volumes:
       - "./app:/app:rw"
       - "./src:/src:rw"
-      - "./backup:/backup:rw"
+      - "./app/sql/backup:/backup:rw"
       - "${WOW_PATH}:/app/wow:rw"
     tty: true
     restart: "no"
