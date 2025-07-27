@@ -38,7 +38,7 @@ help:
 	@echo "  make setup_db            - Initialize, bundle, install, and finalize all databases"
 	@echo "  make bundle_db           - Build SQL bundles (base, patches, fixes, custom) into $(SQL_INSTALL_DIR)"
 	@echo "  make init_db             - Drop and recreate MySQL/MariaDB databases"
-	@echo "  make populate_db         - Install base SQL files from $(SQL_INSTALL_DIR)"
+	@echo "  make populate_db         - Install base SQL Gfiles from $(SQL_INSTALL_DIR)"
 	@echo "  make update_db           - Apply patch SQL bundles from $(SQL_INSTALL_DIR)"
 	@echo "  make fix_db              - Apply SQL fixes (bundled per DB) from $(SQL_INSTALL_DIR)"
 	@echo "  make add_custom_db       - Apply custom SQL (bundled per DB) from $(SQL_INSTALL_DIR)"
@@ -181,7 +181,7 @@ endif
 
 start:
 	@echo "Starting services (DB: $(DB_MODE))"
-	$(DOCKER_COMPOSE) $(DB_PROFILES) up $(DB_SERVICE) authserver worldserver
+	$(DOCKER_COMPOSE) $(DB_PROFILES) up $(DB_SERVICE) authserver worldserver -d
 
 stop:
 	$(DOCKER_COMPOSE) stop
@@ -241,8 +241,10 @@ check:
 fetch_source:
 	@if [ ! -d src/pandaria_5.4.8 ]; then \
 		echo "Cloning $(PROJECT_NAME) source..."; \
-		git clone $(REPO_URL) src; \
+		mkdir -p src; \
+		git clone $(REPO_URL) src/pandaria_5.4.8; \
 	else \
 		echo "Updating $(PROJECT_NAME) source..."; \
-		cd src/pandaria_5.4.8 && git pull --rebase; \
+		cd src/pandaria_5.4.8; \
+		git pull --rebase; \
 	fi
