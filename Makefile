@@ -16,8 +16,12 @@ TELNET_PORT ?= $(RA_PORT)
 
 # DB container profile (only runs if EXTERNAL_DB=false)
 DB_PROFILES :=
+DB_MODE=external
+DB_SERVICE=
 ifeq ($(EXTERNAL_DB),false)
     DB_PROFILES := --profile db
+	DB_MODE=internal
+	DB_SERVICE=db
 endif
 
 .DEFAULT_GOAL := help
@@ -137,6 +141,12 @@ finalize_db:
 	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh templates auth_update_template.sql
 
 setup_db:
+	@if [ "$(EXTERNAL_DB)" = "false" ]; then \
+		$(DOCKER_COMPOSE) up -d db; \
+		echo "Waiting 11 seconds for MySQL on $(DB_HOST) to start..."; \
+		sleep 11; \
+	fi
+
 	@echo "Initializing databases..."
 	$(MAKE) init_db
 	@echo "Bundling SQL files..."
@@ -168,32 +178,45 @@ apply_sql:
 		$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands/exec_sql.sh "$(DIR)" "" "$(DB)"; \
 	fi
 	
-	
-ifeq ($(EXTERNAL_DB),true)
-  DB_PROFILES=
-  DB_SERVICE=
-  DB_MODE=external
-else
-  DB_PROFILES=--profile db
-  DB_SERVICE=db
-  DB_MODE=internal
-endif
-
 start:
 	@echo "Starting services (DB: $(DB_MODE))"
-	$(DOCKER_COMPOSE) $(DB_PROFILES) up $(DB_SERVICE) authserver worldserver -d
+	@if [ "$(EXTERNAL_DB)" = "false" ]; then \
+		$(DOCKER_COMPOSE) up -d db authserver worldserver; \
+	else \
+		$(DOCKER_COMPOSE) up -d authserver worldserver; \
+	fi
 
 stop:
-	$(DOCKER_COMPOSE) stop
+	@echo "Stopping services (DB: $(DB_MODE))"
+	@if [ "$(EXTERNAL_DB)" = "false" ]; then \
+		$(DOCKER_COMPOSE) stop db authserver worldserver; \
+	else \
+		$(DOCKER_COMPOSE) stop authserver worldserver; \
+	fi
 
 restart:
-	$(DOCKER_COMPOSE) restart
+	@echo "Restarting services (DB: $(DB_MODE))"
+	@if [ "$(EXTERNAL_DB)" = "false" ]; then \
+		$(DOCKER_COMPOSE) restart db authserver worldserver; \
+	else \
+		$(DOCKER_COMPOSE) restart authserver worldserver; \
+	fi
 
 logs:
-	$(DOCKER_COMPOSE) logs -f
+	@echo "Tailing logs (DB: $(DB_MODE))"
+	@if [ "$(EXTERNAL_DB)" = "false" ]; then \
+		$(DOCKER_COMPOSE) logs -f db authserver worldserver; \
+	else \
+		$(DOCKER_COMPOSE) logs -f authserver worldserver; \
+	fi
 
 down:
-	$(DOCKER_COMPOSE) down
+	@echo "Removing services (DB: $(DB_MODE))"
+	@if [ "$(EXTERNAL_DB)" = "false" ]; then \
+		$(DOCKER_COMPOSE) down db authserver worldserver; \
+	else \
+		$(DOCKER_COMPOSE) down authserver worldserver; \
+	fi
 
 uninstall:
 	@echo "Removing all containers, volumes, and images..."
