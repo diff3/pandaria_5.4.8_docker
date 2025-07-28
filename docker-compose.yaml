@@ -20,11 +20,13 @@ services:
   authserver:
     image: ${IMAGE_NAME}-authserver:${OS_NAME}
     container_name: ${CONTAINER_NAME}-authserver
-    environment:
-      - TZ=${TIMEZONE}
+    env_file:
+      - ./.env
     build:
       context: docker/authserver
       dockerfile: Dockerfile
+      args:
+        BASE_IMAGE: ${BASE_IMAGE}
     volumes:
       - "./app:/app:rw"
     ports:
@@ -34,11 +36,13 @@ services:
   worldserver:
     image: ${IMAGE_NAME}-worldserver:${OS_NAME}
     container_name: ${CONTAINER_NAME}-worldserver
-    environment:
-      - TZ=${TIMEZONE}
+    env_file:
+      - ./.env
     build:
       context: docker/worldserver
       dockerfile: Dockerfile
+      args:
+        BASE_IMAGE: ${BASE_IMAGE}
     volumes:
       - "./app:/app:rw"
     ports:

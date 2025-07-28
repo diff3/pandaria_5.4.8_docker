@@ -239,7 +239,7 @@ configure_client:
 	@sh misc/configure_client.sh '$(WOW_PATH)' '$(WOW_LOCALE)' '$(REALM_ADDRESS)'
 
 apply_custom_config:
-	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands$(INSTALL_PREFIX)ly_custom_config.sh $(FILE)
+	$(DOCKER_COMPOSE) run --rm $(UTILITY) /bin/commands$(INSTALL_PREFIX) apply_custom_config.sh $(FILE)
 
 install: fetch_source build compile extract_data setup_db configure start
 	@echo "Installation complete. All services are running."

@@ -1,15 +1,26 @@
-FROM debian:bookworm-slim
+# Select base image (default: Debian 12 / bookworm)
+ARG BASE_IMAGE=debian:bookworm-slim
+FROM ${BASE_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install only runtime libraries (ACE, OpenSSL, MySQL client lib)
+# Install runtime libraries only
 RUN apt-get update && apt-get install -y \
-    libace-7.* libace-dev libreadline8 \
-    libssl3  default-mysql-client \
+    libace-dev \          
+    libssl3 \            
+    libmariadb3 \       
+    libreadline8 \   
+    libncurses6 \    
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
+# Copy entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Default working directory
 WORKDIR /app
 
-# Run the authserver binary from /app/bin
-CMD ["./bin/worldserver"]
+# Default command (can be overridden by ENV)
+ENV START_AUTH="./bin/worldserver"
+
+ENTRYPOINT ["/entrypoint.sh"]
